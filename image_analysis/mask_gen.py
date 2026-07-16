@@ -7,8 +7,9 @@ import cv2
 import argparse
 from pathlib import Path
 import csv
-from segment_anything import SamPredictor, sam_model_registry, SamAutomaticMaskGenerator
+from segment_anything import SamPredictor, sam_model_registry
 import sys
+import time
 
 parser = argparse.ArgumentParser(
     description=(
@@ -21,14 +22,21 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "--input",
     type=str,
-    required=False,
-    help="Path to either a single input image or folder of images.",
+    required=True,
+    help="Path to directory storing cropped png files and their respective pit coords csv files.",
 )
 
 parser.add_argument(
-    "--coords",
+    "--output",
     type = str,
-    help="Path to csv containing coordinates for pit to be masked",
+    required = False,
+    help = "Path to directory to store masks"
+)
+
+parser.add_argument(
+    "--model",
+    type = str,
+    help = "Path to model"
 )
 
 def valid_dir(path: Path):
@@ -86,72 +94,74 @@ def main(args: argparse.Namespace):
     sys.path.append("..")
 
     model_type = "vit_h"
-    checkpoint_path = "sam_vit_h_4b8939.pth"
+    checkpoint_path = args.model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    image_path: str = valid_file(Path(args.input))
-    coords_path: str = valid_file(Path(args.coords))
-    image_16bit = cv2.imread(image_path, -1)
-    image_min = float(image_16bit.min())
-    image_max = float(image_16bit.max())
-    image_8bit = ((image_16bit.astype(float) - image_min) / (image_max - image_min) * 255).astype(np.uint8)
-    image_8bit_rgb = cv2.merge([image_8bit, image_8bit, image_8bit])
+    input_dir = valid_dir(Path(args.input))
+    output_dir = valid_dir(Path(args.output))
 
-    # display image
-    print("Image dimensions: ", image_8bit_rgb.shape)
-    plt.figure(figsize=(8, 8))
-    plt.imshow(image_8bit, cmap = "gray")
-    plt.xlim(0, 640)
-    plt.ylim(640, 0)
-    plt.axis('on')
-    plt.show()
+    img_counter = 0
+    for img in input_dir.iterdir():
+        if img.suffix == ".png":
+            start_time = time.perf_counter()
 
-    # display image with pit coordinates visible
-    with open(coords_path, mode = 'r', newline = '', encoding = 'utf-8') as file:
-        reader = csv.reader(file)
-        coords = np.array([[int(x) for x in list(reader)[1]]])
-        # print(coords)
-    input_label = np.array([1])
+            # read img and prepare for generating mask
+            image_16bit = cv2.imread(img, -1)
+            image_min = float(image_16bit.min())
+            image_max = float(image_16bit.max())
+            image_8bit = ((image_16bit.astype(float) - image_min) / (image_max - image_min) * 255).astype(np.uint8)
+            image_8bit_rgb = cv2.merge([image_8bit, image_8bit, image_8bit])
 
-    plt.figure(figsize = (8,8))
-    plt.imshow(image_8bit_rgb, cmap = "gray")
-    show_points(coords, input_label, plt.gca())
-    plt.xlim(0, 640)
-    plt.ylim(640, 0)
-    plt.axis('on')
-    plt.show()
+            # search for corresponding pit coordinates csv file
+            coords_path = valid_file(Path(f"{input_dir}/{img.stem.split("_")[0]}_pit_coords.csv"))
+            with open(coords_path, mode = 'r', newline = '', encoding = 'utf-8') as file:
+                reader = csv.reader(file)
+                coords = np.array([[int(x) for x in list(reader)[1]]])
+            input_label = np.array([1])
 
-    # generate mask centered on target point
-    sam = sam_model_registry[model_type](checkpoint=checkpoint_path)
-    sam.to(device=device)
-    sam.float()
-    with torch.inference_mode():
-    #     # mask_generator = SamAutomaticMaskGenerator(
-    #     #     model = sam
-    #     # )
-    #     # masks = mask_generator.generate(image)
-        predictor = SamPredictor(sam)
-        predictor.set_image(image_8bit_rgb)
-        masks, scores, logits = predictor.predict(
-            point_coords = coords,
-            point_labels = input_label,
-            multimask_output = True,
-        )
-    print(masks.shape)
-    for i, (mask, score) in enumerate(zip(masks, scores)):
-        plt.figure(figsize=(8,8))
-        plt.imshow(image_8bit_rgb, cmap = "gray")
-        show_mask(mask, plt.gca())
-        show_points(coords, input_label, plt.gca())
-        plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
-        plt.axis('off')
-        plt.show()
+            # generate mask centered on target point
+            sam = sam_model_registry[model_type](checkpoint=checkpoint_path)
+            sam.to(device=device)
+            sam.float()
+            with torch.inference_mode():
+                predictor = SamPredictor(sam)
+                predictor.set_image(image_8bit_rgb)
+                masks, _, _ = predictor.predict(
+                    point_coords = coords,
+                    point_labels = input_label,
+                    multimask_output = False,
+                )
+            mask = masks[0]
 
-    # plt.figure(figsize=(20,20))
-    # plt.imshow(image)
-    # show_anns(masks)
-    # plt.axis('off')
-    # plt.show()
+            # write mask to yolo compatible file
+            binary_mask = mask.astype(np.uint8) * 255
+
+            contours, _ = cv2.findContours(binary_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            blank_mask = np.zeros((binary_mask.shape[0], binary_mask.shape[1], 3), dtype = np.uint8)
+            for _, contour in enumerate(contours):
+                cv2.drawContours(blank_mask, [contour], -1, [30, 144, 255], -1)
+            print(len(contours))
+            yolo_lines = []
+            contour = contours[0]
+            for point in contour:
+                x, y = point[0]
+                # todo: fix this formatting to match proper yolo formatting
+                yolo_lines.append(f"{x / 640:.4f}, {y / 640:.4f}")
+
+
+
+            # cv2.imwrite(f"{output_dir}/{img.stem}.png", blank_mask)
+
+            print(f"Masked image {img.name}")
+            img_counter += 1
+            print(f"{img_counter} images have been masked")
+
+            end_time = time.perf_counter()
+            execution_time = end_time - start_time
+            print(f"Executed in {execution_time // 60} minutes and {execution_time % 60:.3f} seconds")
+
+            if img_counter == 1:
+                break
 
 if __name__ == "__main__":
     args = parser.parse_args()
