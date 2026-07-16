@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import cv2
-import matplotlib.pyplot as plt
+import numpy as np
 import argparse
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(
     description=(
@@ -21,13 +22,18 @@ parser.add_argument(
 
 def main(args: argparse.Namespace):
     image = cv2.imread(args.input, -1)
-    assert image.dtype == "uint16", f"Error: image downsampled to {image.dtype}"
-    assert image.min() >= 0, "Error: image contains negative pixel values"
-    assert image.max() <= 65535, "Error: image data exceeds 16-bit bounds"
-    plt.figure(figsize = (8,8))
-    plt.imshow(image, cmap = "gray", vmin = image.min(), vmax = image.max())
-    plt.axis("off")
+    image_float = image.astype(float)
+    image_min = image_float[image_float > 0].min()
+    image_max = image_float[image_float > 0].max()
+    brightened_image = ((image_float - image_min) / (image_max - image_min) * 255).astype(np.uint8)
+    cv2.namedWindow(args.input, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(args.input, 600, 600)
+    print(type(brightened_image))
+    # cv2.cvtColor(brightened_image, cv2.COLOR_BGR2RGB)
+    plt.imshow(brightened_image, cmap = 'gray')
     plt.show()
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
