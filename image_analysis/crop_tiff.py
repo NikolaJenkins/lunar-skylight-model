@@ -70,6 +70,7 @@ def has_pit(*, cropped_image: np.ndarray, base_image: np.ndarray):
     print("Shadow threshold:", shadow_threshold)
 
     shadow_pixel_num = np.sum(cropped_image < shadow_threshold)
+    print("Number of shadowed pixels:", shadow_pixel_num)
     if cropped_image.min() <= shadow_threshold:
         shadow_pixel_num = np.sum(cropped_image <= shadow_threshold)
         return shadow_pixel_num > 15
@@ -85,30 +86,27 @@ def main(args: argparse.Namespace):
         coords_dict = dict(zip(pit_dict["index"], pit_dict["data"]))
         for tiff in input_dir.iterdir():
             image = cv2.imread(tiff, -1)
-            print(type(image))
             key = tiff.stem.upper()[:-1]
             pit_y, pit_x = coords_dict[key]
-            crop_offset_x = random.randint(20, 620)
-            crop_offset_y = random.randint(20, 620)
-            cropped_pit_x = -crop_offset_x
-            cropped_pit_y = -crop_offset_y
-            # subprocess.run([
-            #     "magick",
-            #     tiff,
-            #     "-crop",
-            #     f"640x640+{pit_x + crop_offset_x}+{pit_y + crop_offset_y}",
-            #     f"{output_dir}/{tiff.stem}_cropped.tif",
-            # ])
+            crop_offset_x = random.randint(-300, 300)
+            crop_offset_y = random.randint(-300, 300)
+            cropped_pit_x = 320 - crop_offset_x
+            cropped_pit_y = 320 - crop_offset_y
+            print("cropped image dimensions:",
+                pit_x + crop_offset_x - 320,
+                pit_x + crop_offset_x + 320,
+                pit_y + crop_offset_y - 320,
+                pit_y + crop_offset_y + 320,
+            )
             cropped_image = image[
-                pit_x + crop_offset_x - 320 : pit_x + crop_offset_y + 320,
-                pit_y + crop_offset_y - 320 : pit_y + crop_offset_y + 320
-            ]
-            print(cropped_image.shape)
-            # print("Cropped image has pit?:", has_pit(cropped_image = cropped_image, base_image = image))
-            # cv2.imwrite(
-            #     f"{output_dir}/{tiff.stem}_cropped.png",
-            #     cropped_image
-            # )
+                max(pit_x + crop_offset_x - 320, 0) : min(pit_x + crop_offset_x + 320, 50000),
+                max(pit_y + crop_offset_y - 320, 0) : min(pit_y + crop_offset_y + 320, 5000)
+            ].astype(np.uint16)
+            cv2.imwrite(
+                f"{output_dir}/{tiff.stem}_cropped.png",
+                cropped_image
+            )
+
 
             # save the pits coordinates in the cropped image as a csv
             pit_coords_data = [
@@ -126,37 +124,28 @@ def main(args: argparse.Namespace):
 
             tiff_counter += 1
             print(f"Number of images cropped: {tiff_counter}")
+
+    else:
+        for tiff in input_dir.iterdir():
+            image = cv2.imread(tiff, -1)
+            width, height = image.shape[:2]
+            crop_offset_x = random.randint(0, width - 640)
+            crop_offset_y = random.randint(0, height - 640)
+            cropped_image = image[
+                crop_offset_x : crop_offset_x + 640,
+                crop_offset_y: crop_offset_y + 640
+            ].astype(np.uint16)
+            cv2.imwrite(
+                f"{output_dir}/{tiff.stem}_cropped_random.png",
+                cropped_image,
+            )
+            print(f"x, y offsets: {crop_offset_x}, {crop_offset_y}")
+            print(f"Cropped image has a pit?: {has_pit(cropped_image = cropped_image, base_image = image)}")
+            print(f"Image {tiff.name} cropped")
+
+            tiff_counter += 1
             if tiff_counter == 1:
                 break
-
-    # TODO: add random crop if csv isn't provided
-    else:
-        # for tiff in input_dir.iterdir():
-        #     image = cv2.imread(tiff)
-        #     height, width = image.shape[:2]
-        #     crop_offset_x = random.randint(0, width - 640)
-        #     crop_offset_y = random.randint(0, height - 640)
-        #     cropped_image = image[
-        #         crop_offset_x : crop_offset_x + 640,
-        #         crop_offset_y: crop_offset_y + 640
-        #     ]
-        #     print(f"x, y offsets: {crop_offset_x}, {crop_offset_y}")
-        #     print(cropped_image.shape)
-        #     # subprocess.run([
-        #     #     "magick",
-        #     #     tiff,
-        #     #     "-crop",
-        #     #     f"640x640+{crop_offset_x}+{crop_offset_y}",
-        #     #     f"{output_dir}/{tiff.stem}_cropped_random.tif",
-        #     # ])
-        #     print(f"Cropped image has a pit?: {has_pit(cropped_image = cropped_image, base_image = image)}")
-        #     print(f"Image {tiff.name} cropped")
-        #     tiff_counter += 1
-        #     if tiff_counter == 1:
-        #         break
-        base_image = cv2.imread(args.input_base, -1)
-        cropped_image = cv2.imread(args.input_tif, -1)
-        print(f"Cropped image has a pit?: {has_pit(cropped_image = cropped_image, base_image = base_image)}")
 
 if __name__ == "__main__":
     args = parser.parse_args()
