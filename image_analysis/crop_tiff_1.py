@@ -8,6 +8,7 @@ import numpy as np
 import random
 import csv
 import cv2
+from helper_functions import valid_dir, valid_file, gdal_to_pixel_coords
 
 parser = argparse.ArgumentParser(
     description=(
@@ -37,46 +38,6 @@ parser.add_argument(
     help="Path to output directory",
 )
 
-def valid_dir(path: Path):
-    if not path.exists():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid path")
-    elif not path.is_dir():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid directory")
-    else:
-        return path
-
-def valid_file(path: Path):
-    if not path.exists():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid path")
-    elif not path.is_file():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid file")
-    # elif not path.stem == ".csv":
-    #     raise argparse.ArgumentTypeError(f"{path} is not a valid csv file")
-    else:
-        print(path.stem)
-        return path
-
-
-def has_pit(*, cropped_image: np.ndarray, base_image: np.ndarray):
-    """Use on a 640x640 image to roughly distinguish images with pits from images without pits."""
-
-    # calculate threshold for shadowed pixels based on uncropped image
-    base_rep = base_image[::50, ::50]
-    valid_pixels = base_rep[base_rep > 0]
-    base_median_brightness = np.median(valid_pixels)
-    base_min_brightness = valid_pixels.min()
-    shadow_threshold = base_min_brightness + base_median_brightness * .15
-
-    # check density of shadowed pixels
-    shadowed_pixels = (cropped_image < shadow_threshold).astype(np.uint8)
-    num_shadowed_pixels = np.sum(shadowed_pixels)
-    tile_size = 25
-    density_image = cv2.boxFilter(shadowed_pixels.astype(float), -1, (tile_size, tile_size), normalize = False)
-    max_shadow_cluster = np.max(density_image)
-    is_dense_shadow = max_shadow_cluster >= 15
-
-    return cropped_image.min() <= shadow_threshold and num_shadowed_pixels >= 10 and is_dense_shadow
-
 def main(args: argparse.Namespace):
     input_dir = valid_dir(Path(args.input))
     output_dir = valid_dir(Path(args.output))
@@ -86,11 +47,13 @@ def main(args: argparse.Namespace):
         pit_csv = pd.read_csv(pit_csv, index_col = 0)
         pit_dict = pit_csv.to_dict(orient = "split")
         coords_dict = dict(zip(pit_dict["index"], pit_dict["data"]))
+
         for tiff in input_dir.iterdir():
             # read image
             image = cv2.imread(tiff, -1)
             height, width = image.shape[:2]
             key = tiff.stem.upper()[:-1]
+
             pit_y, pit_x = coords_dict[key]
 
             # random offset so model doesn't always train on pits in center of image
@@ -142,8 +105,10 @@ def main(args: argparse.Namespace):
 
             tiff_counter += 1
             print(f"Image {tiff.name} cropped")
-            print(f"This image has a pit?: {has_pit(cropped_image = cropped_image, base_image = image)}")
+            # print(f"This image has a pit?: {has_pit(cropped_image = cropped_image, base_image = image)}")
             print(f"Number of images cropped: {tiff_counter}")
+            if tiff_counter == 1:
+                break
 
     else:
         for tiff in input_dir.iterdir():

@@ -10,22 +10,21 @@
 3. Submit the order under the 'Download' button in the upper bar, and either wait for a confirmation email or find the list of direct download links under 'Advanced user options'.
 
 4. Copy the links to a txt file. Then run the commands
-grep '\.img' > col_1_img_links.txt
-and
-grep 'c\.xml' > col_1_xml_links.txt.
+```grep '\.img' > col_1_img_links.txt
+grep 'c\.xml' > col_1_xml_links.txt.```
 
 5. Download the img and xml files using wget to a directory of your choice.
 
 6. Repeat steps 2-5 but with lunar_pit_order/lunar_pit_ids_2_3_order.txt instead, and downloading the images to a different directory.
 
 ### Convert .img files to .tif files
-1. Run chmod +x img_to_tiff.py
+1. Run ```chmod +x img_to_tiff.py```
 2. Create directory to store tiff images.
-3. Run ~/LunarSkylights/image_analysis/img_to_tiff.py --input \[directory storing img and xmf files\] --output \[target directory to store tiff images\]
+3. Run ```~/LunarSkylights/image_analysis/img_to_tiff.py --input \[directory storing img and xmf files\] --output \[target directory to store tiff images\]```
 
 ### Crop .tif images
-1. Run chmod +x crop_tiff.py
+1. Run ```chmod +x crop_tiff.py```
 2. Create directory to store cropped images and corresponding pit coordinate csv files.
 3. Create another directory to store randomly cropped images.
-4. Run ~/LunarSkylights/image_analysis/crop_tiff.py --input \[directory storing tiff images\] --coords ~/LunarSkylights/lunar_pit_order_pit_pixel_coords.csv --output \[target directory created in step 2\]
-5. Run ~/LunarSkylights/image_analysis/crop_tiff.py --input \[directory storing tiff images\] --output \[target directory created in step 3\]
+4. Run ```~/LunarSkylights/image_analysis/crop_tiff.py --input \[directory storing tiff images\] --coords ~/LunarSkylights/lunar_pit_order_pit_pixel_coords.csv --output \[target directory created in step 2\]```
+5. Run ```~/LunarSkylights/image_analysis/crop_tiff.py --input \[directory storing tiff images\] --output \[target directory created in step 3\]```

@@ -2,6 +2,7 @@
 
 import argparse
 from pathlib import Path
+from helper_functions import valid_dir
 import subprocess
 
 parser = argparse.ArgumentParser(
@@ -23,14 +24,6 @@ parser.add_argument(
     required=True,
     help="Path to folder to store tiff images.",
 )
-
-def valid_dir(path: str):
-    if not Path(path).exists():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid path")
-    elif not Path(path).is_dir():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid directory")
-    else:
-        return path
 
 def main(args: argparse.Namespace):
     input_dir = Path(valid_dir(args.input))

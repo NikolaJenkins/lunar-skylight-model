@@ -2,7 +2,7 @@
 
 import argparse
 from pathlib import Path
-from ultralytics.utils import
+from ultralytics.data.utils import visualize_image_annotations
 
 parser = argparse.ArgumentParser(
     description=(
@@ -26,22 +26,15 @@ parser.add_argument(
     help="Path to a single input mask txt",
 )
 
-def valid_file(path: Path):
-    if not path.exists():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid path")
-    elif not path.is_file():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid file")
-    else:
-        return path
-
 def main(args: argparse.Namespace):
-    image_path = valid_file(Path(args.input_png))
-    csv_path = valid_file(Path(args.input_csv))
     classes = {
         0: "Lunar pit"
     }
-    # do the thing!
-
+    visualize_image_annotations(
+        args.input_png,
+        args.input_txt,
+        classes
+    )
 
 
 if __name__ == "__main__":

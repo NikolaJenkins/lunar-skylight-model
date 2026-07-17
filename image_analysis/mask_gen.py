@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import cv2
 import argparse
 from pathlib import Path
+from helper_functions import valid_dir, valid_file
 import csv
 from segment_anything import SamPredictor, sam_model_registry
 import sys
@@ -38,22 +39,6 @@ parser.add_argument(
     type = str,
     help = "Path to model"
 )
-
-def valid_dir(path: Path):
-    if not path.exists():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid path")
-    elif not path.is_dir():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid directory")
-    else:
-        return path
-
-def valid_file(path: Path):
-    if not path.exists():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid path")
-    elif not path.is_file():
-        raise argparse.ArgumentTypeError(f"{path} is not a valid file")
-    else:
-        return path
 
 def show_mask(mask, ax, random_color=False):
     if random_color:
@@ -132,6 +117,13 @@ def main(args: argparse.Namespace):
                     multimask_output = False,
                 )
             mask = masks[0]
+
+            # plt.figure(figsize = (8,8))
+            # plt.imshow(image_8bit_rgb)
+            # show_mask(masks, plt.gca())
+            # show_points(coords, input_label, plt.gca())
+            # plt.axis('on')
+            # plt.show()
 
             # write mask to yolo compatible file
             binary_mask = mask.astype(np.uint8) * 255
