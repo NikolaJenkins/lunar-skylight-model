@@ -135,22 +135,21 @@ def main(args: argparse.Namespace):
 
             # write mask to yolo compatible file
             binary_mask = mask.astype(np.uint8) * 255
-
             contours, _ = cv2.findContours(binary_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             blank_mask = np.zeros((binary_mask.shape[0], binary_mask.shape[1], 3), dtype = np.uint8)
             for _, contour in enumerate(contours):
                 cv2.drawContours(blank_mask, [contour], -1, [30, 144, 255], -1)
             print(len(contours))
             yolo_lines = []
+            normalized_points = []
             contour = contours[0]
             for point in contour:
                 x, y = point[0]
-                # todo: fix this formatting to match proper yolo formatting
-                yolo_lines.append(f"{x / 640:.4f}, {y / 640:.4f}")
-
-
-
-            # cv2.imwrite(f"{output_dir}/{img.stem}.png", blank_mask)
+                normalized_points.append(f"{x / 640:.4f} {y / 640:.4f}")
+            yolo_lines.append(f"0 {" ".join(normalized_points)}")
+            print(yolo_lines)
+            with open(f"{output_dir}/{img.stem}.txt", "w") as file:
+                file.write(yolo_lines[0])
 
             print(f"Masked image {img.name}")
             img_counter += 1
@@ -160,8 +159,8 @@ def main(args: argparse.Namespace):
             execution_time = end_time - start_time
             print(f"Executed in {execution_time // 60} minutes and {execution_time % 60:.3f} seconds")
 
-            if img_counter == 1:
-                break
+            # if img_counter == 1:
+            #     break
 
 if __name__ == "__main__":
     args = parser.parse_args()
