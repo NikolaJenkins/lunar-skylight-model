@@ -10,8 +10,8 @@
 3. Submit the order under the 'Download' button in the upper bar, and either wait for a confirmation email or find the list of direct download links under 'Advanced user options'.
 
 4. Copy the links to a txt file. Then run the commands
-```grep '\.img' > col_1_img_links.txt
-grep 'c\.xml' > col_1_xml_links.txt.```
+```grep '\.img' > col_1_img_links.txt``` 
+```grep 'c\.xml' > col_1_xml_links.txt.```
 
 5. Download the img and xml files using wget to a directory of your choice.
 

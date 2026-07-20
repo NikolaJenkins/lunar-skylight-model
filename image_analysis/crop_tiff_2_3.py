@@ -2,12 +2,13 @@
 
 import argparse
 from pathlib import Path
-from helper_functions import valid_dir, valid_file, has_pit, read_raw_img
+from helper_functions import valid_dir, valid_file, has_pit, read_raw_img, sliding_window_pit_search, random_crop
 import pandas as pd
 import numpy as np
 import random
 import csv
 import cv2
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(
     description=(
@@ -20,14 +21,28 @@ parser.add_argument(
     "--input",
     type=str,
     required=True,
-    help="Path to directory of IMG files",
+    help="Path to directory of column 2/3 raw img files",
 )
 
 parser.add_argument(
-    "--col-1",
+    "--col-1-img",
     type=str,
-    required=False,
-    help="Path to directory storing column 1 images and corresponding csv files"
+    required=True,
+    help="Path to directory storing column 1 raw img files"
+)
+
+parser.add_argument(
+    "--col-1-cropped",
+    type = str,
+    required = True,
+    help = "Path to directory storing cropped column 1 pngs and corresponding coordinates csv files"
+)
+
+parser.add_argument(
+    "--csv",
+    type = str,
+    required = True,
+    help = "Path to csv matching column 2/3 images with corresponding column 1 images"
 )
 
 parser.add_argument(
@@ -39,18 +54,68 @@ parser.add_argument(
 
 def main(args: argparse.Namespace):
     input_dir = valid_dir(Path(args.input))
-    col_1_dir = valid_dir(Path(args.col_1))
-    output_dir = valid_dir(Path(args.output))
+    col_1_img_dir = valid_dir(Path(args.col_1_img))
+    col_1_cropped_dir = valid_dir(Path(args.col_1_cropped))
+    pits_csv_path = valid_file(Path(args.csv))
+    # output_dir = valid_dir(Path(args.output))
 
-    tiff_counter = 0
-    if col_1_dir is not None:
+    img_counter = 0
+    pit_csv = pd.read_csv(pits_csv_path, index_col = 0)
+    pit_dict = pit_csv.to_dict(orient = "split")
+    coords_dict = dict(zip(pit_dict["index"], pit_dict["data"]))
+
+    if input_dir is not None:
         for img in input_dir.iterdir():
             # read images
-            np_array = read_raw_img(img_path = img, width = 5064)
-            img_stem = img.stem.lower()
-            tiff = cv2.imread(f"{col_1_dir}/{img_stem}_cropped.png", -1)
-            # coords = pd.read_csv(f"{col_1_dir}/{img_stem}_pit_coords.csv")
-            # x, y = coords.iloc[1]
+            img_stem = img.stem[:-1]
+            col_1_stem = coords_dict[img_stem][0].lower()
+            col_1_img_path = f"{col_1_img_dir}/{col_1_stem}c.img"
+            print("Col 1 image path:", col_1_img_path)
+            col_1_csv_path = f"{col_1_cropped_dir}/{col_1_stem}c_pit_coords.csv"
+            col_1_img = read_raw_img(img_path = col_1_img_path)
+            col_2_3_img = read_raw_img(img_path = img)
+            col_1_csv = pd.read_csv(col_1_csv_path)
+            x, y = col_1_csv.iloc[0].tolist()
+            print("Column 1 pit x, y:", x, y)
+
+
+            # for name, matrix in [("Column 1", col_1_img), ("Column 2/3", col_2_3_img)]:
+            #     print(f"--- Checking {name} Matrix Integrity ---")
+            #     print(f"Data type: {matrix.dtype}")
+            #     print(f"Array Shape (Height x Width): {matrix.shape}")
+            #     print(f"Minimum Pixel Intensity: {matrix.min()}")
+            #     print(f"Maximum Pixel Intensity: {matrix.max()}")
+            #     print(f"Average Pixel Intensity: {matrix.mean():.2f}")
+            #     print("-" * 40)
+            pit_y, pit_x = sliding_window_pit_search(
+                img_1 = col_1_img,
+                img_2_3 = col_2_3_img,
+                pit_sample = x,
+                pit_line = y,
+            )
+
+            col_2_3_y, col_2_3_x = col_2_3_img.shape
+            cropped_start_x = max(0, min(pit_x, col_2_3_x) - 320)
+            cropped_start_y = max(0, min(pit_y, col_2_3_y) - 320)
+            print("Check cropped origin:", cropped_start_x, cropped_start_y)
+            cropped_img = col_2_3_img[
+                cropped_start_x : cropped_start_x + 640,
+                cropped_start_y : cropped_start_y + 640
+            ]
+            print("Check dimensions", cropped_img.shape)
+
+            # cropped_img, cropped_pit_x, cropped_pit_y = random_crop(
+            #     img = col_2_3_img,
+            #     pit_sample = pit_x,
+            #     pit_line = pit_y
+            # )
+
+            plt.figure(figsize = (8,8))
+            plt.imshow(cropped_img, cmap = "gray", aspect = 'equal')
+            plt.title(f"Crop check")
+            plt.show()
+
+            # crop_origin_x = max(0, pi)
 
             # random offset so model doesn't always train on pits in center of image
             # crop_offset_x = random.randint(-300, 300)
@@ -99,11 +164,11 @@ def main(args: argparse.Namespace):
             #     writer = csv.writer(file)
             #     writer.writerows(pit_coords_data)
 
-            tiff_counter += 1
+            img_counter += 1
             print(f"Image {img.name} cropped")
             # print(f"This image has a pit?: {has_pit(cropped_image = cropped_image, base_image = image)}")
-            print(f"Number of images cropped: {tiff_counter}")
-            if tiff_counter == 5:
+            print(f"Number of images cropped: {img_counter}")
+            if img_counter == 1:
                 break
 
     else:
@@ -125,8 +190,8 @@ def main(args: argparse.Namespace):
                 cropped_image,
             )
 
-            tiff_counter += 1
-            print("Number of images cropped:", tiff_counter)
+            img_counter += 1
+            print("Number of images cropped:", img_counter)
             print(f"Image {img.name} cropped")
             # if tiff_counter == 1:
             #     break
