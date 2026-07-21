@@ -20,11 +20,11 @@
 ### Convert .img files to .tif files
 1. Run ```chmod +x img_to_tiff.py```
 2. Create directory to store tiff images.
-3. Run ```~/LunarSkylights/image_analysis/img_to_tiff.py --input \[directory storing img and xmf files\] --output \[target directory to store tiff images\]```
+3. Run ```~/LunarSkylights/image_analysis/img_to_tiff.py --input [directory storing img and xmf files] --output [target directory to store tiff images]```
 
 ### Crop .tif images
 1. Run ```chmod +x crop_tiff.py```
 2. Create directory to store cropped images and corresponding pit coordinate csv files.
 3. Create another directory to store randomly cropped images.
-4. Run ```~/LunarSkylights/image_analysis/crop_tiff.py --input \[directory storing tiff images\] --coords ~/LunarSkylights/lunar_pit_order_pit_pixel_coords.csv --output \[target directory created in step 2\]```
-5. Run ```~/LunarSkylights/image_analysis/crop_tiff.py --input \[directory storing tiff images\] --output \[target directory created in step 3\]```
+4. Run ```~/LunarSkylights/image_analysis/crop_tiff.py --input [directory storing tiff images] --coords ~/LunarSkylights/lunar_pit_order_pit_pixel_coords.csv --output [target directory created in step 2]```
+5. Run ```~/LunarSkylights/image_analysis/crop_tiff.py --input [directory storing tiff images] --output [target directory created in step 3]```
