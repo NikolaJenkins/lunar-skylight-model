@@ -2,7 +2,6 @@ import argparse
 from pathlib import Path
 import numpy as np
 import cv2
-import rasterio
 import random
 
 def valid_dir(path: Path):
@@ -61,42 +60,35 @@ def read_raw_img(img_path: str):
         else:
             return np.zeros_like(raw_matrix, dtype = np.uint8)
 
-def sliding_window_pit_search(
-    img_1,
-    img_2_3,
+def sift_pit_search(
+    img_1_path,
+    img_2_3_path,
     pit_sample,
     pit_line,
-    window_size = 150,
-    search_radius = 2000,
+    radius = 200
 ):
+    # read images
+    img_1 = read_raw_img(img_1_path)
+    img_2_3 = read_raw_img(img_2_3_path)
+
+    # extract pit template from img 1
+    img_height, img_width = img_1.shape
+    pit_template_origin_x = max(0, min(pit_sample - radius, img_width - 2 * radius))
+    pit_template_origin_y = max(0, min(pit_line - radius, img_height - 2 * radius))
     pit_template = img_1[
-        pit_sample - (window_size // 2) : pit_sample + (window_size // 2),
-        pit_line - (window_size // 2) : pit_line + (window_size // 2)
+        pit_template_origin_y : pit_template_origin_y + 2 * radius,
+        pit_template_origin_x : pit_template_origin_x + 2 * radius
     ]
+    print(f"Template origin coordinates: ({pit_template_origin_x}, {pit_template_origin_y})")
 
-    img_height, img_width = img_2_3.shape
-    img_center_x = img_width // 2
-    img_center_y = img_height // 2
-    search_x_min = max(0, img_center_x - search_radius)
-    search_x_max = min(img_width, img_center_x + search_radius)
-    search_y_min = max(0, img_center_y - search_radius)
-    search_y_max = min(img_height, img_center_y + search_radius)
-    search_area = img_2_3[
-        search_x_min: search_x_max,
-        search_y_min : search_y_max
-    ]
+    # initialize SIFT
+    sift = cv2.SIFT_create()
+    # actually ended up freezing my laptop, this process had to be killed
+    kp_1, descriptor_1 = sift.detectAndCompute(pit_template, None)
+    kp_2_3, descriptor_2_3 = sift.detectAndCompute(img_2_3, None)
 
-    search_area = img_2_3
-    res = cv2.matchTemplate(search_area, pit_template, cv2.TM_CCOEFF_NORMED)
-    _, max_val, _, max_loc = cv2.minMaxLoc(res)
-    if max_val > 0.60:
-        tile_match_x, tile_match_y = max_loc
-        col_2_pit_x = tile_match_x + window_size // 2
-        col_2_pit_y = tile_match_y + window_size // 2
-        print(f"Match found! Confidence: {max_val:.4f}, pit pixels: x: {col_2_pit_x}, y: {col_2_pit_y}")
-        return col_2_pit_x, col_2_pit_y
-    print(f"Couldn't find a pit match, highest confidence: {max_val:.4f}")
-    return None, None
+    if descriptor_1 is None or descriptor_2_3 is None:
+        print("SIFT couldn't calculate texture descriptors")
 
 def random_crop(img, pit_sample, pit_line, crop_size = 640):
     offset_radius = crop_size // 2 - 20

@@ -8,7 +8,7 @@ import numpy as np
 import random
 import csv
 import cv2
-from helper_functions import valid_dir, valid_file, gdal_to_pixel_coords
+from helper_functions import valid_dir, valid_file
 
 parser = argparse.ArgumentParser(
     description=(

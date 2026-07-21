@@ -25,7 +25,7 @@ parser.add_argument(
     help="Path to output directory for blank txt files",
 )
 
-def main(args):
+def main(args: argparse.Namespace):
     background_png_dir = valid_dir(Path(args.input))
     background_labels_dir = valid_dir(Path(args.output))
     # for filename in os.listdir(background_png_dir):

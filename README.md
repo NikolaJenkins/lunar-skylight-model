@@ -18,13 +18,26 @@
 6. Repeat steps 2-5 but with lunar_pit_order/lunar_pit_ids_2_3_order.txt instead, and downloading the images to a different directory.
 
 ### Convert .img files to .tif files
-1. Run ```chmod +x img_to_tiff.py```
+1. Run ```chmod +x image_analysis/img_to_tiff.py```
 2. Create directory to store tiff images.
-3. Run ```~/LunarSkylights/image_analysis/img_to_tiff.py --input [directory storing img and xmf files] --output [target directory to store tiff images]```
+3. Run ```image_analysis/img_to_tiff.py --input [directory storing img and xmf files] --output [target directory to store tiff images]```
 
 ### Crop .tif images
-1. Run ```chmod +x crop_tiff.py```
+1. Run ```chmod +x image_analysis/crop_tiff.py```
 2. Create directory to store cropped images and corresponding pit coordinate csv files.
-3. Create another directory to store randomly cropped images.
-4. Run ```~/LunarSkylights/image_analysis/crop_tiff.py --input [directory storing tiff images] --coords ~/LunarSkylights/lunar_pit_order_pit_pixel_coords.csv --output [target directory created in step 2]```
-5. Run ```~/LunarSkylights/image_analysis/crop_tiff.py --input [directory storing tiff images] --output [target directory created in step 3]```
+3. Create another directory to store background images.
+4. Run ```image_analysis/crop_tiff.py --input [directory storing tiff images] --coords lunar_pit_order_pit_pixel_coords.csv --output [target directory created in step 2]```
+5. Run ```image_analysis/crop_tiff.py --input [directory storing tiff images] --output [target directory created in step 3]```
+6. Create a directory to store all the images. Move the cropped png images from the directories created in steps 2 and 3 to the directory just created.
+7. Create another directory to store the images stretched to 8 bits for the YOLO model. Run ```chmod +x image_analysis/convert_16bit_png.py```. Then run ```image_analysis/convert_16bit_png.py --input [directory storing images from step 6] --output [directory to store 8 bit images]```
+
+### Generate labels
+1. Create a directory to store masked image labels. Create another directory to store background image labels.
+2. Run ```chmod +x image_analysis/mask_gen```. Then run ```image_analysis/mask_gen --input [directory storing cropped png images] --output [directory to store mask labels] --model image_analysis/sam_vit_h_4b8939.pth```
+3. Run ```chmod +x image_analysis/gen_blank_labels.py```. Then run ```image_analysis/gen_blank_labels --input [directory storing background images] --output [directory to store blank labels]```.
+4. Create a directory to store all the labels. Move the masked image labels and blank labels to the new directory.
+
+### Create dataset
+1. Create a directory to store the dataset. Inside, create directories called 'images' and 'labels'.
+2. Run ```chmod +x image_analysis/split_data.py```
+3. Run ```image_analysis/split_data.py --input-images [directory storing all the cropped pngs] --input-labels [directory storing all the labels] --output [directory storing dataset]```
