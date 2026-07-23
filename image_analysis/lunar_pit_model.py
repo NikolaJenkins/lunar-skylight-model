@@ -4,6 +4,7 @@ from ultralytics import YOLO
 def main():
     # start from pretrained checkpoint
     model_name = "yolo26n-seg.pt"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Starting from model:", model_name)
     model = YOLO(model_name)
     results = model.train(
@@ -11,7 +12,7 @@ def main():
         epochs = 150,
         imgsz = 640,
         batch = 16,
-        device = "cuda",
+        device = device,
         name = "lunar_pit_v1",
         hsv_h = 0.0,
         hsv_s = 0.0,
