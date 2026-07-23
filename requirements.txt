@@ -1,6 +1,6 @@
 matplotlib==3.11.1
 numpy==2.5.1
 pandas==3.0.5
-segment_anything==1.0
 ultralytics==8.4.96
 opencv-python
+git+https://github.com/facebookresearch/segment-anything.git

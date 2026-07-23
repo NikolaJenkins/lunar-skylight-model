@@ -30,13 +30,14 @@ parser.add_argument(
 parser.add_argument(
     "--output",
     type = str,
-    required = False,
+    required = True,
     help = "Path to directory to store masks"
 )
 
 parser.add_argument(
     "--model",
     type = str,
+    required = True,
     help = "Path to model"
 )
 

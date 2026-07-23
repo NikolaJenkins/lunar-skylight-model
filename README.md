@@ -15,6 +15,9 @@
 4. Download the requirements using ```pip install -r requirements.txt```.
 
 5. Install torch and torchvision by following the steps in this link: https://pytorch.org/get-started/locally/. You may have to add the tag ```--no-cache-dir``` to the end of the install command to force pip to bypass the storage space limit on your computer.
+6. Download the SAM model by clicking on this link:
+https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
+Then move the model to the image_analysis directory.
 
 ### Install images (skip to generating labels if using sample images)
 1. Go to https://ode.rsl.wustl.edu/moon/productsearch and select Lunar Reconnaissance Orbiter -> LROC -> PDS4 Calibrated Data Record Narrow Angle Camera under "Step 1. Select Data Sets to Search (A Selection is Required)".
