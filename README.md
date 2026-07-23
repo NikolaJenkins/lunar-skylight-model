@@ -1,5 +1,7 @@
 # lunar-skylight-model
 
+This is a project for creating an object detection model and identifying lunar skylight candidates. Since lunar skylights are a subcategory of lunar pits and are hard to distinguish from them, this model just identifies candidates that can later be reviewed by a human. 
+
 ## Installation
 
 ### Clone the repository
@@ -17,7 +19,7 @@
 5. Install torch and torchvision by following the steps in this link: https://pytorch.org/get-started/locally/. You may have to add the tag ```--no-cache-dir``` to the end of the install command to force pip to bypass the storage space limit on your computer.
 6. Download the SAM model by clicking on this link:
 https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth.
-Then move the model from Downloads to the image_analysis directory.
+Then move the model from Downloads to the ```image_analysis``` directory.
 
 ### Install images (skip to generating labels if using sample images)
 1. Go to https://ode.rsl.wustl.edu/moon/productsearch and select Lunar Reconnaissance Orbiter -> LROC -> PDS4 Calibrated Data Record Narrow Angle Camera under "Step 1. Select Data Sets to Search (A Selection is Required)".
@@ -60,6 +62,10 @@ Then move the model from Downloads to the image_analysis directory.
 2. Run ```chmod +x image_analysis/split_data.py```
 3. Run ```image_analysis/split_data.py --input-images [directory storing all the cropped pngs] --input-labels [directory storing all the labels] --output [directory storing dataset]```
 
-### Train model (work in progress)
-1. 
-2. Run ```chmod +x image_analysis/lunar_pit_model.py```
+### Train model
+1. Run ```chmod +x image_analysis/lunar_pit_model.py```.
+2. Run ```image_analysis/lunar_pit_model.py```. This may take a long time depending how much data you're training on.
+
+### Run inferences (work in progress)
+1. Run ```chmod +x image_analysis/lunar_pit_pred.py```
+2. To test the model on images, run ```image_analysis_lunar_pit_pred.py --model [dataset root]/runs/segment/lunar_pit_v1/weights/best.pt --images [any directory with cropped 640x640 images]```
