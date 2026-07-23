@@ -2,6 +2,13 @@
 
 ## Steps to replicate
 
+### Clone the repository
+1. Clone this repository using ```git clone git@github.com:NikolaJenkins/lunar-skylight-model.git```.
+2. Move to the repository using ```mv lunar-skylight-model```.
+3. Create a virtual environment by running ```python3 -m venv .lunar```.
+4. Activate the environment by running ```source .lunar/bin/activate```.
+5. Download the requirements using ```pip install -r requirements.txt```.
+
 ### Install images
 1. Go to https://ode.rsl.wustl.edu/moon/productsearch and select Lunar Reconnaissance Orbiter -> LROC -> PDS4 Calibrated Data Record Narrow Angle Camera under "Step 1. Select Data Sets to Search (A Selection is Required)".
 
@@ -41,3 +48,7 @@
 1. Create a directory to store the dataset. Inside, create directories called 'images' and 'labels'.
 2. Run ```chmod +x image_analysis/split_data.py```
 3. Run ```image_analysis/split_data.py --input-images [directory storing all the cropped pngs] --input-labels [directory storing all the labels] --output [directory storing dataset]```
+
+### Train model
+1. 
+2. Run ```chmod +x image_analysis/lunar_pit_model.py```
