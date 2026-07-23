@@ -8,7 +8,7 @@ def main():
     model = YOLO(model_name)
     results = model.train(
         data = "/mnt/storage/images/lunar_dataset/lunar_pits.yaml",
-        epochs = 100,
+        epochs = 150,
         imgsz = 640,
         batch = 16,
         device = "cuda",
@@ -20,6 +20,8 @@ def main():
         scale = 0.5,
         flipud = 0.5,
         fliplr = 0.5,
+        box = 12.5,
+        cls = 2.0,
     )
 
     # Path to best checkpoint

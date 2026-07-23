@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import cv2
 import argparse
 from pathlib import Path
-from helper_functions import valid_dir, valid_file
+from helper_functions import valid_dir, valid_file, show_points, show_mask
 import csv
 from segment_anything import SamPredictor, sam_model_registry
 import sys
@@ -40,41 +40,6 @@ parser.add_argument(
     help = "Path to model"
 )
 
-def show_mask(mask, ax, random_color=False):
-    if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-    else:
-        color = np.array([30/255, 144/255, 255/255, 0.6])
-    h, w = mask.shape[-2:]
-    mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
-    ax.imshow(mask_image)
-
-def show_points(coords, labels, ax, marker_size=375):
-    pos_points = coords[labels==1]
-    neg_points = coords[labels==0]
-    ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
-    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
-
-def show_box(box, ax):
-    x0, y0 = box[0], box[1]
-    w, h = box[2] - box[0], box[3] - box[1]
-    ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))
-
-def show_anns(anns):
-    if len(anns) == 0:
-        return
-    sorted_anns = sorted(anns, key=(lambda x: x['area']), reverse=True)
-    ax = plt.gca()
-    ax.set_autoscale_on(False)
-
-    img = np.ones((sorted_anns[0]['segmentation'].shape[0], sorted_anns[0]['segmentation'].shape[1], 4))
-    img[:,:,3] = 0
-    for ann in sorted_anns:
-        m = ann['segmentation']
-        color_mask = np.concatenate([np.random.random(3), [0.35]])
-        img[m] = color_mask
-    ax.imshow(img)
-
 def main(args: argparse.Namespace):
     sys.path.append("..")
 
@@ -86,8 +51,10 @@ def main(args: argparse.Namespace):
     output_dir = valid_dir(Path(args.output))
 
     img_counter = 0
+    mask_counter = 0
+    low_qual_masks = []
     for img in input_dir.iterdir():
-        if img.suffix == ".png":
+        if img.suffix == ".png" and "random" not in img.name:
             start_time = time.perf_counter()
 
             # read img and prepare for generating mask
@@ -111,48 +78,83 @@ def main(args: argparse.Namespace):
             with torch.inference_mode():
                 predictor = SamPredictor(sam)
                 predictor.set_image(image_8bit_rgb)
-                masks, _, _ = predictor.predict(
+                masks, scores, logits = predictor.predict(
                     point_coords = coords,
                     point_labels = input_label,
-                    multimask_output = False,
+                    multimask_output = True,
                 )
-            mask = masks[0]
 
-            # plt.figure(figsize = (8,8))
-            # plt.imshow(image_8bit_rgb)
-            # show_mask(masks, plt.gca())
-            # show_points(coords, input_label, plt.gca())
-            # plt.axis('on')
-            # plt.show()
+            # create side by side plot with original image
+            fig, ax = plt.subplots(1, 4, figsize = (24, 6))
+            og_plot = ax[0]
+            fig.suptitle("Mask candidates")
+            og_plot.imshow(image_8bit_rgb)
+            show_points(coords, input_label, ax[0], marker_size = 100)
+            og_plot.set_title("Original Image", fontsize=18)
+            og_plot.axis('on')
+
+            # add 3 masked plots
+            for i, (mask, score) in enumerate(zip(masks, scores)):
+                subplot = ax[i + 1]
+                subplot.imshow(image_8bit_rgb)
+                show_mask(mask, subplot)
+                subplot.set_title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
+                subplot.axis('on')
+            plt.tight_layout()
+            plt.show(block = False)
+            plt.pause(0.1)
+
+            selected_mask = None
+
+            # take user input to determine which mask to take
+            choice = input(f"Select one of the masks for image {img.name} by typing 1, 2, or 3. If no masks were generated or they're all low quality, type 's' to skip.").strip().lower()
+            while True:
+                if choice in ["1", "2", "3"]:
+                    selected_mask = masks[int(choice) - 1]
+                    print(f"Chose mask {choice} for image {img.name}")
+                    mask_counter += 1
+                    break
+                elif choice == "s":
+                    print(f"Skipped mask generation for image {img.name}")
+                    low_qual_masks.append(img.name)
+                    break
+            plt.close()
 
             # write mask to yolo compatible file
-            binary_mask = mask.astype(np.uint8) * 255
-            contours, _ = cv2.findContours(binary_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            blank_mask = np.zeros((binary_mask.shape[0], binary_mask.shape[1], 3), dtype = np.uint8)
-            for _, contour in enumerate(contours):
-                cv2.drawContours(blank_mask, [contour], -1, [30, 144, 255], -1)
-            print(len(contours))
-            yolo_lines = []
-            normalized_points = []
-            contour = contours[0]
-            for point in contour:
-                x, y = point[0]
-                normalized_points.append(f"{x / 640:.4f} {y / 640:.4f}")
-            yolo_lines.append(f"0 {" ".join(normalized_points)}")
-            print(yolo_lines)
-            with open(f"{output_dir}/{img.stem}.txt", "w") as file:
-                file.write(yolo_lines[0])
+            if selected_mask is not None:
+                binary_mask = selected_mask.astype(np.uint8) * 255
+                contours, _ = cv2.findContours(binary_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                blank_mask = np.zeros((binary_mask.shape[0], binary_mask.shape[1], 3), dtype = np.uint8)
+                for _, contour in enumerate(contours):
+                    cv2.drawContours(blank_mask, [contour], -1, [30, 144, 255], -1)
+                print(len(contours))
+                yolo_lines = []
+                normalized_points = []
+                contour = contours[0]
+                for point in contour:
+                    x, y = point[0]
+                    normalized_points.append(f"{x / 640:.5f} {y / 640:.4f}")
+                yolo_lines.append(f"0 {" ".join(normalized_points)}")
+                with open(f"{output_dir}/{img.stem}.txt", "w") as file:
+                    file.write(yolo_lines[0])
 
-            print(f"Masked image {img.name}")
-            img_counter += 1
-            print(f"{img_counter} images have been masked")
+            print(f"{mask_counter} images have been masked")
 
             end_time = time.perf_counter()
             execution_time = end_time - start_time
             print(f"Executed in {execution_time // 60} minutes and {execution_time % 60:.3f} seconds")
 
-            # if img_counter == 1:
-            #     break
+            print("Unmasked files:", low_qual_masks)
+            img_counter += 1
+
+    # record images that were skipped
+    if low_qual_masks:
+        skipped_images = f"{output_dir}/low_qual_images.txt"
+        with open(skipped_images, "w") as file:
+            for item in low_qual_masks:
+                file.write(f"{item}\n")
+    else:
+        print("All images had satisfactory masks!")
 
 if __name__ == "__main__":
     args = parser.parse_args()

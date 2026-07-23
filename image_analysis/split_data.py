@@ -49,8 +49,8 @@ def split_dataset(
     for split in ['train', 'val', 'test']:
         (dataset_images / split).mkdir(parents = True, exist_ok = True)
         (dataset_labels / split).mkdir(parents = True, exist_ok = True)
-    pit_images = [png for png in image_dir.iterdir() if "random" not in png.name.lower()]
-    background_images = [png for png in image_dir.iterdir() if "random" in png.name.lower()]
+    pit_images = [png for png in image_dir.iterdir() if "random" not in png.name.lower() and png.suffix == ".png"]
+    background_images = [png for png in image_dir.iterdir() if "random" in png.name.lower() and png.suffix == ".png"]
     print("# of pit images:", len(pit_images))
     print("# of background images:", len(background_images))
 
@@ -70,7 +70,6 @@ def split_dataset(
     }
 
     # split background images into train, val, test
-    # TODO: revisit this background image split, because the model completely under-predicted the pits
     random.shuffle(background_images)
     total_backgrounds = len(background_images)
     included_backgrounds = background_images[:int(total_backgrounds * background_image_ratio)]
@@ -78,9 +77,9 @@ def split_dataset(
     print(f"Keeping {included_background_num} background images in dataset")
     train_mark_backgrounds = int(included_background_num * train_ratio)
     val_mark_backgrounds = train_mark_backgrounds + int(included_background_num * val_ratio)
-    train_backgrounds = background_images[:train_mark_backgrounds]
-    val_backgrounds = background_images[train_mark_backgrounds:val_mark_backgrounds]
-    test_backgrounds = background_images[val_mark_backgrounds:]
+    train_backgrounds = included_backgrounds[:train_mark_backgrounds]
+    val_backgrounds = included_backgrounds[train_mark_backgrounds:val_mark_backgrounds]
+    test_backgrounds = included_backgrounds[val_mark_backgrounds:]
     background_splits = {
         'train': train_backgrounds,
         'val': val_backgrounds,
