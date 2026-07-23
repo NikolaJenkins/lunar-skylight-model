@@ -1,15 +1,22 @@
 # lunar-skylight-model
 
-## Steps to replicate
+## Installation
 
 ### Clone the repository
 1. Clone this repository using ```git clone git@github.com:NikolaJenkins/lunar-skylight-model.git```.
-2. Move to the repository using ```mv lunar-skylight-model```.
-3. Create a virtual environment by running ```python3 -m venv .lunar```.
-4. Activate the environment by running ```source .lunar/bin/activate```.
-5. Download the requirements using ```pip install -r requirements.txt```.
 
-### Install images
+### Set up the environment
+1. Move to the repository using ```cd lunar-skylight-model```.
+
+2. Create a virtual environment by running ```python3 -m venv .lunar```.
+
+3. Activate the environment by running ```source .lunar/bin/activate```.
+
+4. Download the requirements using ```pip install -r requirements.txt```.
+
+5. Install torch and torchvision by following the steps in this link: https://pytorch.org/get-started/locally/. You may have to add the tag ```--no-cache-dir``` to the end of the install command to force pip to bypass the storage space limit on your computer.
+
+### Install images (skip to generating labels if using sample images)
 1. Go to https://ode.rsl.wustl.edu/moon/productsearch and select Lunar Reconnaissance Orbiter -> LROC -> PDS4 Calibrated Data Record Narrow Angle Camera under "Step 1. Select Data Sets to Search (A Selection is Required)".
 
 2. Copy 50 lines from lunar_pit_order/lunar_pit_ids_1_order.txt into the Product ID text box under "Step 2. Set Additional Filtering Parameters (Optional)". Then click "View Results in Table" under step 4 and add the images to the cart. Repeat for the rest of the txt file in batches of 50 images.
