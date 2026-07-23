@@ -147,6 +147,8 @@ def main(args: argparse.Namespace):
 
             print("Unmasked files:", low_qual_masks)
             img_counter += 1
+            if img_counter==1:
+                break
 
     # record images that were skipped
     if low_qual_masks:

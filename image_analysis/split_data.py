@@ -49,7 +49,14 @@ def split_dataset(
     for split in ['train', 'val', 'test']:
         (dataset_images / split).mkdir(parents = True, exist_ok = True)
         (dataset_labels / split).mkdir(parents = True, exist_ok = True)
-    pit_images = [png for png in image_dir.iterdir() if "random" not in png.name.lower() and png.suffix == ".png"]
+    low_qual_images_path = valid_file(label_dir / "low_qual_images.txt")
+    low_qual_images = []
+    with open(low_qual_images_path, "r", encoding="utf-8") as file:
+        for line in file:
+            file = line.rstrip("\n")
+            low_qual_images.append(file)
+    print("# of low quality images:", len(low_qual_images))
+    pit_images = [png for png in image_dir.iterdir() if "random" not in png.name.lower() and png.suffix == ".png" and png.name not in low_qual_images]
     background_images = [png for png in image_dir.iterdir() if "random" in png.name.lower() and png.suffix == ".png"]
     print("# of pit images:", len(pit_images))
     print("# of background images:", len(background_images))

@@ -1,3 +1,6 @@
 lunar_pit_order/lroc_pits_atlas.pdf
 image_analysis/sam_vit_h_4b8939.pth
 image_analysis/test_labels.py
+image_analysis/display_cropped_png.py
+image_analysis/display masked_png.py
+image_analysis/crop_tiff_2_3.py

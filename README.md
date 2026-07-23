@@ -12,7 +12,7 @@
 
 3. Activate the environment by running ```source .lunar/bin/activate```.
 
-4. Download the requirements using ```pip install -r requirements.txt```.
+4. Download the requirements using ```python -m pip install -r requirements.txt```.
 
 5. Install torch and torchvision by following the steps in this link: https://pytorch.org/get-started/locally/. You may have to add the tag ```--no-cache-dir``` to the end of the install command to force pip to bypass the storage space limit on your computer.
 6. Download the SAM model by clicking on this link:
@@ -46,7 +46,8 @@ Then move the model from Downloads to the image_analysis directory.
 4. Run ```image_analysis/crop_tiff.py --input [directory storing tiff images] --coords lunar_pit_order_pit_pixel_coords.csv --output [target directory created in step 2]```
 5. Run ```image_analysis/crop_tiff.py --input [directory storing tiff images] --output [target directory created in step 3]```
 6. Create a directory to store all the images. Move the cropped png images from the directories created in steps 2 and 3 to the directory just created.
-7. Create another directory to store the images stretched to 8 bits for the YOLO model. Run ```chmod +x image_analysis/convert_16bit_png.py```. Then run ```image_analysis/convert_16bit_png.py --input [directory storing images from step 6] --output [directory to store 8 bit images]```
+7. Create another directory to store the images stretched to 8 bits for the YOLO model. Run ```chmod +x image_analysis/convert_16bit_png.py```. Then run ```image_analysis/convert_16bit_png.py --input [directory storing images from step 6] --output [directory to store 8 bit images]```. 
+8. (If using downloaded images) Copy the pit coordinate files to the new directory by running ```cp [directory storing images from step 6]/*.csv [directory storing 8 bit images]```.
 
 ### Generate labels
 1. Create a directory to store masked image labels. Create another directory to store background image labels.

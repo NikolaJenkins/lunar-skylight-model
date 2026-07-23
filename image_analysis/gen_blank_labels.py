@@ -31,10 +31,11 @@ def main(args: argparse.Namespace):
     # for filename in os.listdir(background_png_dir):
         # stem, _ = os.path.spli
     png_counter = 0
-    for png in background_png_dir.iterdir():
+    background_images = [png for png in background_png_dir.iterdir() if "random" in png.name]
+    for png in background_images:
         stem = png.stem
         blank_labels_path = f"{background_labels_dir}/{stem}.txt"
-        with open(blank_labels_path, "w") as file:
+        with open(blank_labels_path, "w"):
             pass
         png_counter += 1
         print(f"{png_counter} label files generated")
