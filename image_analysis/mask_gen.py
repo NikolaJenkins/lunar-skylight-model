@@ -108,7 +108,7 @@ def main(args: argparse.Namespace):
             selected_mask = None
 
             # take user input to determine which mask to take
-            choice = input(f"Select one of the masks for image {img.name} by typing 1, 2, or 3. If no masks were generated or they're all low quality, type 's' to skip.").strip().lower()
+            choice = input(f"Select one of the masks for image {img.name} by typing 1, 2, or 3. The best mask should generally cover a pit and its shadow. If no masks were generated or they're all low quality, type 's' to skip.").strip().lower()
             while True:
                 if choice in ["1", "2", "3"]:
                     selected_mask = masks[int(choice) - 1]
