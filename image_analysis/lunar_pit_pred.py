@@ -47,11 +47,11 @@ def main(args = argparse.Namespace):
 
     image_counter = 0
     for image in images_dir.iterdir():
-        if "random" not in image.name:
+        if "random" not in image.name and image.suffix == ".png":
             # run inference on images, confirm they're not randomly cropped
             results = model(
                 source = image,
-                conf = 0.4,
+                conf = 0.1,
                 imgsz = 640,
                 device = device,
                 max_det = 1,
@@ -60,18 +60,9 @@ def main(args = argparse.Namespace):
                 save_txt = True,
                 save_conf = True
             )
-            # TODO: solve error when trying to save inferenced images
-
-            # show inference (Results.show() does not work)
-            # results[0].show()
-            # for i, r in enumerate(results):
-            #     img_bgr = r.plot()
-            #     img_rgb = Image.fromarray(img_bgr[...,::-1])
-            #     r.show()
-            print("Ran inference on image:", image.name)
             image_counter += 1
-            if image_counter == 5:
-                break
+        if image_counter == 5:
+            break
 
 if __name__ == "__main__":
     args = parser.parse_args()
