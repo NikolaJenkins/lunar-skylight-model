@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from ultralytics import YOLO
+import torch
 
 def main():
     # start from pretrained checkpoint
@@ -13,7 +14,7 @@ def main():
         imgsz = 640,
         batch = 16,
         device = device,
-        name = "lunar_pit_v1",
+        name = "lunar_pit_v2",
         hsv_h = 0.0,
         hsv_s = 0.0,
         hsv_v = 0.4,

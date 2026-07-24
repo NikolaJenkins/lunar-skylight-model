@@ -64,7 +64,8 @@ Then move the model from Downloads to the ```image_analysis``` directory.
 
 ### Train model
 1. Run ```chmod +x image_analysis/lunar_pit_model.py```.
-2. Run ```image_analysis/lunar_pit_model.py```. This may take a long time depending how much data you're training on.
+2. Run ```cd [directory storing dataset]```.
+3. Run ```image_analysis/lunar_pit_model.py```. This may take a long time depending how much data you're training on.
 
 ### Run inferences (work in progress)
 1. Run ```chmod +x image_analysis/lunar_pit_pred.py```
