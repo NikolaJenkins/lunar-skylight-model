@@ -7,16 +7,19 @@ This is a project for creating an object detection model and identifying lunar s
 ### Clone the repository
 1. Clone this repository using 
 ```
-git clone git@github.com:NikolaJenkins/lunar-skylight-model.git```
+git clone git@github.com:NikolaJenkins/lunar-skylight-model.git
+```
 
 ### Set up the environment
 1. Move to the repository using 
 ```
-cd lunar-skylight-model```
+cd lunar-skylight-model
+```
 
 2. Create a virtual environment by running 
 ```
-python3 -m venv .lunar```
+python3 -m venv .lunar
+```
 
 3. Activate the environment by running 
 ```source .lunar/bin/activate```
