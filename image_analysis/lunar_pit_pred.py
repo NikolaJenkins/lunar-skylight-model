@@ -9,6 +9,7 @@ import numpy as np
 from convert_16_bit_png import convert_16_bit_image
 from helper_functions import valid_dir, valid_file
 from ultralytics import YOLO
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(
     description=(
@@ -54,7 +55,8 @@ def main(args = argparse.Namespace):
         if "random" not in image.name and image.suffix == ".IMG":
             with rasterio.open(image) as uncropped_image:
                 print("Reading image", image.name, type(uncropped_image))
-                # print("image dimensions:", uncropped_image.shape)
+                # rasterio.plot.show(uncropped_image)
+                print("image dimensions:", uncropped_image.shape)
                 height, width = uncropped_image.shape
                 tile_counter = 0
                 for y in range(0, height - 640, 500):
@@ -63,35 +65,31 @@ def main(args = argparse.Namespace):
                         rast_window = rasterio.windows.Window(x, y, 640, 640)
                         tile = uncropped_image.read(1, window = rast_window)
 
-                        # convert tile to 16 bit image
-                        tile_16_bit = tile.astype(np.uint16)
-                        tile_mean, tile_std = tile_16_bit.mean(), tile_16_bit.std()
-                        pixel_min = max(tile_16_bit.min(), tile_mean - 2 * tile_std)
-                        pixel_max = min(tile_16_bit.max(), tile_mean + 2 * tile_std)
-                        if pixel_max - pixel_min <= 0:
-                            continue
-                        # clipped_tile =
-
-                        # convert 16 bit tile to 8 bit tile
-
-
+                        # convert tile to 8 bit image
+                        tile_8_bit = convert_16_bit_image(tile)
+                        # tile_8_bit_rgb = cv2.cvtColor(tile_8_bit, cv2.COLOR_GRAY2RGB)
+                        tile_8_bit_rgb = cv2.merge([tile_8_bit, tile_8_bit, tile_8_bit])
+                        print("Tile check -", "x:", x, "y:", y, "tile shape:", tile_8_bit_rgb.shape)
+                        plt.figure(figsize=(8,8))
+                        plt.imshow(tile_8_bit_rgb, cmap = "gray")
+                        plt.show()
                         # run inference on images, confirm they're not randomly cropped
-                        # results = model(
-                        #     source = image,
-                        #     conf = 0.2,
-                        #     imgsz = 640,
-                        #     device = device,
-                        #     max_det = 1,
-                        #     name = args.output,
-                        #     save = True,
-                        #     save_txt = True,
-                        #     save_conf = True,
-                        # )
+                #         results = model(
+                #             source = tile_8_bit,
+                #             conf = 0.5,
+                #             imgsz = 640,
+                #             device = device,
+                #             max_det = 1,
+                #             name = args.output,
+                #             save = True,
+                #             save_txt = True,
+                #             save_conf = True,
+                #         )
+                #         print("Found pit:", len(results[0].boxes) > 0)
                         tile_counter += 1
                         if tile_counter == 1:
                             break
                     break
-
             image_counter += 1
             print(tile_counter, "tiles were produced")
         if image_counter == 1:
