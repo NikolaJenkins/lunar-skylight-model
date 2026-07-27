@@ -180,7 +180,7 @@ chmod +x ~/lunar-skylight-model/image_analysis/split_data.py
 1. Run 
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/lunar_pit_model.py
-```.
+```
 2. Run 
 ```
 cd ~/lunar_dataset
