@@ -36,6 +36,7 @@ python -m pip install -r requirements.txt
 --no-cache-dir
 ``` 
 to the end of the install command to force pip to bypass the storage space limit on your computer.
+
 6. Download the SAM model by clicking on this link:
 https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth.
 Then move the model from Downloads to the image_analysis directory using
@@ -53,6 +54,7 @@ mkdir ~/col_1_imgs && cd ~/col_1_imgs
 ```
 grep -oE '\S*c\.img' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > col_1_img_links.txt
 ``` 
+
 ```
 grep -oE '\S*c\.xml' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > col_1_xml_links.txt
 ```
@@ -60,12 +62,15 @@ grep -oE '\S*c\.xml' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > co
 ```
 wget col_1_img_links.txt
 ```
+
 ```wget col__1_xml_links.txt
 ```
+
 4. Create a directory to store the column 2 and 3 IMG files with:
 ```
 mkdir ~/col_2_3_imgs && cd ~/col_2_3_imgs
 ```
+
 5. Download the images with:
 ```
 wget ~/lunar-skylight-model/img_order_2_3.txt
@@ -76,10 +81,12 @@ wget ~/lunar-skylight-model/img_order_2_3.txt
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/img_to_tiff.py
 ```
+
 2. Create directory to store tiff images by running
 ```
 mkdir ~/col_1_tifs
 ```
+
 3. Run 
 ```
 ~/lunar-skylight-model/image_analysis/img_to_tiff.py --input ~/col_1_imgs --output ~/col_1_tifs
@@ -106,14 +113,15 @@ mkdir ~/all_images
 ~/lunar-skylight-model/image_analysis/crop_tiff.py --input ~/col_1_tifs --output ~/all_images
 ```
 
-5. Create another directory to store the images stretched to 8 bits for the YOLO model by running 
+5. Create another directory to store the images stretched to 8 bits for the YOLO model by running the commands
 ```
 mkdir ~/all_images_8_bit
 ```
-Run 
+
 ```
 chmod +x image_analysis/convert_16bit_png.py
 ```
+
 Then run 
 ```
 image_analysis/convert_16bit_png.py --input ~/all_images --output all_images_8_bit
