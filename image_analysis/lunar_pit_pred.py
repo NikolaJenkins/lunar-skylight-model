@@ -5,11 +5,10 @@ from pathlib import Path
 import cv2
 import rasterio
 import torch
-import numpy as np
 from convert_16_bit_png import convert_16_bit_image
 from helper_functions import valid_dir, valid_file
 from ultralytics import YOLO
-import matplotlib.pyplot as plt
+import time
 
 parser = argparse.ArgumentParser(
     description=(
@@ -44,6 +43,7 @@ def main(args = argparse.Namespace):
     # Load directory and file paths
     model_path = valid_file(Path(args.model))
     images_dir = valid_dir(Path(args.images))
+    output_dir = valid_dir(Path(args.output))
     print("Using model:", model_path.name)
 
     # load device gpu and model
@@ -54,45 +54,62 @@ def main(args = argparse.Namespace):
     for image in images_dir.iterdir():
         if "random" not in image.name and image.suffix == ".IMG":
             with rasterio.open(image) as uncropped_image:
+                start_time = time.perf_counter()
                 print("Reading image", image.name, type(uncropped_image))
-                # rasterio.plot.show(uncropped_image)
-                print("image dimensions:", uncropped_image.shape)
+                image_pred_dir = Path(output_dir / image.stem)
+                image_pred_dir.mkdir(parents = True, exist_ok = True)
                 height, width = uncropped_image.shape
                 tile_counter = 0
-                for y in range(0, height - 640, 500):
-                    for x in range(0, width - 640, 500):
+                for y in range(0, height - 640, 600):
+                    for x in range(0, width - 640, 600):
                         tile_counter += 1
                         rast_window = rasterio.windows.Window(x, y, 640, 640)
                         tile = uncropped_image.read(1, window = rast_window)
 
+                        # TODO: look at 4000x4000 tiles to get more general mean and std
                         # convert tile to 8 bit image
                         tile_8_bit = convert_16_bit_image(tile)
-                        # tile_8_bit_rgb = cv2.cvtColor(tile_8_bit, cv2.COLOR_GRAY2RGB)
-                        tile_8_bit_rgb = cv2.merge([tile_8_bit, tile_8_bit, tile_8_bit])
-                        print("Tile check -", "x:", x, "y:", y, "tile shape:", tile_8_bit_rgb.shape)
-                        plt.figure(figsize=(8,8))
-                        plt.imshow(tile_8_bit_rgb, cmap = "gray")
-                        plt.show()
+                        tile_8_bit_rgb = cv2.cvtColor(tile_8_bit, cv2.COLOR_GRAY2RGB)
+
                         # run inference on images, confirm they're not randomly cropped
-                #         results = model(
-                #             source = tile_8_bit,
-                #             conf = 0.5,
-                #             imgsz = 640,
-                #             device = device,
-                #             max_det = 1,
-                #             name = args.output,
-                #             save = True,
-                #             save_txt = True,
-                #             save_conf = True,
-                #         )
-                #         print("Found pit:", len(results[0].boxes) > 0)
+                        results = model(
+                            source = tile_8_bit_rgb,
+                            conf = 0.80,
+                            iou = 0.45,
+                            imgsz = 640,
+                            device = device,
+                            max_det = 1,
+                        )
+                        # print("Found pit:", results[0].boxes)
+                        result = results[0]
+                        detected_pit_num = len(result.boxes)
+                        if 0 < detected_pit_num <= 2:
+                            print(f"pit discovered at ({x}, {y})")
+                            # print("box result type:", type(result.boxes))
+                            x_min, y_min, x_max, y_max = result.boxes.xyxy.cpu().numpy()[0].astype(int)
+                            confidence = result.boxes.conf.item()
+                            print("box coordinates:", x_min, y_min, x_max, y_max)
+                            cv2.rectangle(tile_8_bit_rgb, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                            cv2.putText(
+                                tile_8_bit_rgb,
+                                f"Pit: {confidence:.2f}",
+                                (x_min, max(20, y_min - 10)),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.6,
+                                (0, 255, 0),
+                                2
+                            )
+                            cv2.imwrite(image_pred_dir / f"{image.stem}_{x}_{y}.png", tile_8_bit_rgb)
+
                         tile_counter += 1
-                        if tile_counter == 1:
-                            break
-                    break
+                        # if tile_counter == 1:
+                            # break
+            end_time = time.perf_counter()
+            total_time = end_time - start_time
             image_counter += 1
             print(tile_counter, "tiles were produced")
-        if image_counter == 1:
+            print(f"Inferencing took {total_time // 60} minutes and {total_time % 60} seconds")
+        if image_counter == 10:
             break
 
 if __name__ == "__main__":
