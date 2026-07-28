@@ -65,6 +65,7 @@ def main(args: argparse.Namespace):
             cv2.fillPoly(image_overlay, [coords], class_color)
             cv2.polylines(image_rgb, [coords], True, class_color)
             masked_image = cv2.addWeighted(image_overlay, 0.4, image_rgb, 0.6, 0)
+            # cv2.imwrite(f"{image_dir}/{png.stem}_masked.png", masked_image)
 
             # display masked image
             plt.figure(figsize = (10, 10))
@@ -73,7 +74,7 @@ def main(args: argparse.Namespace):
             plt.axis("on")
             plt.show()
             png_counter += 1
-            if png_counter == 10:
+            if png_counter == 1:
                 break
 
 if __name__ == "__main__":

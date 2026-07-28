@@ -27,17 +27,15 @@ parser.add_argument(
 )
 
 def convert_16_bit_image(image_16_bit: MatLike):
-    # check that image is actually 16 bit
-    if image_16_bit.dtype != np.uint16:
-        return image_16_bit
     # map values between 0 and 255
-    image_min = image_16_bit.min()
-    image_max = image_16_bit.max()
+    image_float = image_16_bit.astype(np.float32)
+    image_mean, image_std = image_float.mean(), image_float.std()
+    image_min = max(image_float.min(), image_mean - 2 * image_std)
+    image_max = min(image_float.max(), image_mean + 2 * image_std)
     if image_max - image_min > 0:
-        image_float = image_16_bit.astype(np.float32)
-        return ((image_float - image_min) / (image_max - image_min) * 255.0).astype(np.uint8)
+        return ((np.clip(image_float, image_min, image_max) - image_min) / (image_max - image_min) * 255.0).astype(np.uint8)
     else:
-        return np.zeros_like(image_16_bit, dtype = np.uint8)
+        return np.zeros_like(image_float, dtype = np.uint8)
 
 def main(args: argparse.Namespace):
     input_dir = valid_dir(Path(args.input))

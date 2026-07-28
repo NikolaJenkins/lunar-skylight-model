@@ -89,14 +89,14 @@ def main(args = argparse.Namespace):
                             x_min, y_min, x_max, y_max = result.boxes.xyxy.cpu().numpy()[0].astype(int)
                             confidence = result.boxes.conf.item()
                             print("box coordinates:", x_min, y_min, x_max, y_max)
-                            cv2.rectangle(tile_8_bit_rgb, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                            cv2.rectangle(tile_8_bit_rgb, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
                             cv2.putText(
                                 tile_8_bit_rgb,
                                 f"Pit: {confidence:.2f}",
                                 (x_min, max(20, y_min - 10)),
                                 cv2.FONT_HERSHEY_SIMPLEX,
                                 0.6,
-                                (0, 255, 0),
+                                (255, 0, 0),
                                 2
                             )
                             cv2.imwrite(image_pred_dir / f"{image.stem}_{x}_{y}.png", tile_8_bit_rgb)
@@ -109,8 +109,6 @@ def main(args = argparse.Namespace):
             image_counter += 1
             print(tile_counter, "tiles were produced")
             print(f"Inferencing took {total_time // 60} minutes and {total_time % 60} seconds")
-        if image_counter == 10:
-            break
 
 if __name__ == "__main__":
     args = parser.parse_args()
