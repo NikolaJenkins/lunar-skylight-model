@@ -188,12 +188,16 @@ cd ~/lunar_dataset
 ```
 This may take a long time depending on how much data you're training on.
 
-### Run inferences (work in progress)
+### Run inferences
 1. Run 
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/lunar_pit_pred.py
 ```
-2. To test the model on images, run 
+2. Create a directory to store predictions with
 ```
-image_analysis_lunar_pit_pred.py --model ~/lunar_dataset/runs/segment/lunar_pit_v1/weights/best.pt --images [any directory with cropped 640x640 images]
+mkdir ~/lunar_pit_predictions
+```
+4. To test the model on images, run 
+```
+~/lunar-skylight-model/image_analysis/lunar_pit_pred.py --model ~/lunar_dataset/runs/segment/lunar_pit_v1/weights/best.pt --images col_2_3_imgs --output ~/lunar_pit_predictions
 ```
