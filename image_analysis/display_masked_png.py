@@ -34,7 +34,7 @@ def main(args: argparse.Namespace):
     png_counter = 0
     for png in image_dir.iterdir():
         stem = png.stem
-        if "random" not in stem:
+        if "random" not in stem and stem == "m154705713rc_cropped":
             # read image and corresponding label
             image = cv2.imread(png, cv2.IMREAD_UNCHANGED)
             if len(image.shape) == 2:
@@ -65,7 +65,7 @@ def main(args: argparse.Namespace):
             cv2.fillPoly(image_overlay, [coords], class_color)
             cv2.polylines(image_rgb, [coords], True, class_color)
             masked_image = cv2.addWeighted(image_overlay, 0.4, image_rgb, 0.6, 0)
-            # cv2.imwrite(f"{image_dir}/{png.stem}_masked.png", masked_image)
+            cv2.imwrite(f"{image_dir}/{png.stem}_masked.png", masked_image)
 
             # display masked image
             plt.figure(figsize = (10, 10))
