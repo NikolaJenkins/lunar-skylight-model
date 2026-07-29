@@ -20,12 +20,11 @@ def valid_file(path: Path):
         raise argparse.ArgumentTypeError(f"{path} is not a valid path")
     elif not path.is_file():
         raise argparse.ArgumentTypeError(f"{path} is not a valid file")
-    # elif not path.stem == ".csv":
-    #     raise argparse.ArgumentTypeError(f"{path} is not a valid csv file")
     else:
         print(path.stem)
         return path
 
+# based on pitscan formula developed by R. V. Wagner
 def has_pit(*, cropped_image: np.ndarray, base_image: np.ndarray):
     """Use on a 640x640 image to roughly distinguish images with pits from images without pits."""
 
@@ -61,36 +60,6 @@ def read_raw_img(img_path: str):
         else:
             return np.zeros_like(raw_matrix, dtype = np.uint8)
 
-def sift_pit_search(
-    img_1_path,
-    img_2_3_path,
-    pit_sample,
-    pit_line,
-    radius = 200
-):
-    # read images
-    img_1 = read_raw_img(img_1_path)
-    img_2_3 = read_raw_img(img_2_3_path)
-
-    # extract pit template from img 1
-    img_height, img_width = img_1.shape
-    pit_template_origin_x = max(0, min(pit_sample - radius, img_width - 2 * radius))
-    pit_template_origin_y = max(0, min(pit_line - radius, img_height - 2 * radius))
-    pit_template = img_1[
-        pit_template_origin_y : pit_template_origin_y + 2 * radius,
-        pit_template_origin_x : pit_template_origin_x + 2 * radius
-    ]
-    print(f"Template origin coordinates: ({pit_template_origin_x}, {pit_template_origin_y})")
-
-    # initialize SIFT
-    sift = cv2.SIFT_create()
-    # actually ended up freezing my laptop, this process had to be killed
-    kp_1, descriptor_1 = sift.detectAndCompute(pit_template, None)
-    kp_2_3, descriptor_2_3 = sift.detectAndCompute(img_2_3, None)
-
-    if descriptor_1 is None or descriptor_2_3 is None:
-        print("SIFT couldn't calculate texture descriptors")
-
 def random_crop(img, pit_sample, pit_line, crop_size = 640):
     offset_radius = crop_size // 2 - 20
     crop_offset = random.randint(-offset_radius, offset_radius)
@@ -114,17 +83,20 @@ def show_mask(mask, ax, random_color=False):
     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
     ax.imshow(mask_image)
 
+# copied from SAM detection script for drawing star on image
 def show_points(coords, labels, ax, marker_size=375):
     pos_points = coords[labels==1]
     neg_points = coords[labels==0]
     ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
     ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
 
+# copied from SAM detection script for drawing bounding box on image
 def show_box(box, ax):
     x0, y0 = box[0], box[1]
     w, h = box[2] - box[0], box[3] - box[1]
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))
 
+# copied from SAM detection script for drawing mask label on image
 def show_anns(anns):
     if len(anns) == 0:
         return

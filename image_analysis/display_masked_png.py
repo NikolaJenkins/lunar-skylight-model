@@ -60,12 +60,14 @@ def main(args: argparse.Namespace):
             coords = normalized_labels.reshape((-1, 1, 2)).astype(np.int32)
             print("# of coords:", len(coords))
 
-            # create masks
+            # create mask on image overlay
             class_color = colors(class_id, True)
             cv2.fillPoly(image_overlay, [coords], class_color)
             cv2.polylines(image_rgb, [coords], True, class_color)
+
+            # combine image overlay and original image
             masked_image = cv2.addWeighted(image_overlay, 0.4, image_rgb, 0.6, 0)
-            cv2.imwrite(f"{image_dir}/{png.stem}_masked.png", masked_image)
+            # cv2.imwrite(f"{image_dir}/{png.stem}_masked.png", masked_image)
 
             # display masked image
             plt.figure(figsize = (10, 10))

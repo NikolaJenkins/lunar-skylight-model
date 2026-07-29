@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# adapted from SAM notebook: https://github.com/facebookresearch/segment-anything/blob/main/notebooks/predictor_example.ipynb
+# to draw masks on pits and prompt user for best label if possible
 
 import numpy as np
 import torch

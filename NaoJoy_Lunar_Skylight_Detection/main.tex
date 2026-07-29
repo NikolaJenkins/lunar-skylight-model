@@ -2,6 +2,7 @@
 % Published by the University of Lahore -- ISSN 2710-3102
 % Official author guidelines: https://journals.uol.edu.pk/JCSA/Author-Guideline
 \documentclass[twoside,10pt]{article}
+\raggedbottom
 \usepackage{lipsum}  % For sample/placeholder text
 \usepackage{fancyhdr}
 \usepackage{geometry}
@@ -116,11 +117,7 @@
 \vspace{1em}
 \justifying
 % \textit{[Replace this paragraph with your abstract. The abstract should be a single, self-contained paragraph of approximately 150--250 words summarizing the purpose of the study, the methodology used, the principal results, and the main conclusions. Avoid citations, footnotes, and undefined abbreviations in the abstract.]}
-This is a project for creating an object detection model and identifying lunar skylight candidates, which are potential locations for future lunar bases. Since lunar skylights are a subcategory of lunar pits and it's difficult to distinguish the two from each other, the model detects candidates that can be reviewed by humans. I downloaded images taken by the Lunar Reconnaissance Orbiter's narrow angle camera and processed them to create my training dataset. I then trained a YOLO object detection model on this dataset. I then ran inferences on images by dividing them into smaller 640x640 pixel tiles and passing them into the trained model.
-
-% \vspace{-0.1cm}
-% \noindent\textbf{keywords}
-%  Keyword one, Keyword two, Keyword three, Keyword four.
+This is a project for creating an object detection model and identifying lunar skylight candidates, which are potential locations for future lunar bases. Since lunar skylights are a subcategory of lunar pits and it's difficult to distinguish the two from each other, the model detects candidates that can be reviewed by humans. I downloaded images taken by the Lunar Reconnaissance Orbiter's narrow angle camera and processed them to create my training dataset. I then trained a YOLO \cite{Jocher_Ultralytics_YOLO26_Unified_2026} object detection model on this dataset. I then ran inferences on images by dividing them into smaller 640x640 pixel tiles and passing them into the trained model.
 
 \end{abstract}
 
@@ -141,7 +138,7 @@ In this project, I used object detection to identify lunar skylight candidates (
 \section{Methodology}
 % \textit{[Replace this section with a description of your data sources and methodology.]}
 \fontsize{13}{15}\selectfont
-I downloaded all of my images from the Lunar Orbital Data Explorer [insert citation]. I found a list of identified lunar pits from the Lunar Pit Locations shapefile [insert citation]. This website provided a csv containing image ids corresponding to the pits and metadata, such as geospatial information and pit coordinates. To generate labels for my images, I used the Segment Anything Model (SAM) [insert citation].
+I downloaded all of my images from the Lunar Orbital Data Explorer \cite{lroc_nac_data}. I found a list of identified lunar pits from the Lunar Pit Locations shapefile \cite{lroc_pit_csv}. This website provided a csv containing image ids corresponding to the pits and metadata, such as geospatial information and pit coordinates. I wrote Python code to extract important information from the csv, such as the pit image IDs and the pit coordinates. To generate labels for my images, I used the Segment Anything Model (SAM) \cite{kirillov2023segany}.
 
 \subsection{Dataset Creation}
 \fontsize{12}{14}\selectfont
@@ -151,10 +148,10 @@ I downloaded all of my images from the Lunar Orbital Data Explorer [insert citat
 Due to the large size of the raw files (approx. 500 MB per file), I had to store the data on an external drive rather than my computer. I chose to download pre-calibrated images, because during previous testing, I had to process raw images with ISIS tools and SPICE data, which took a long time (several minutes per image) and took up even more storage (1 GB per image). The narrow range of angles from which the images were taken provided uniformity so the model had less information it had to train on.
 
 \subsubsection{Converting and Cropping Images}
-The files were initially stored as raw IMG files, so I had to take steps to convert them to formats compatible with the YOLO model. I first converted the IMG files to tiff files to preserve the image quality. The tiff images were very large (5064x52224 pixels), so I had to crop them to 640x640 pixel tiles and I further converted them to png files so the YOLO model could train on them. By matching image ids with their corresponding pit's pixel coordinates from the csv, I randomly cropped the images so the pits would be randomly placed in the resulting image, rather than consistently centered. I confirmed that these cropped images didn't contain any pits by writing a function based on PitScan [insert citation], which examines the number of shadowed pixels in a potential pit and how they're oriented. The function I wrote created a base threshold for what pixels would be treated as shadows, then looked for a certain density of shadowed pixels in the image. I This introduced variation into the dataset so the model wouldn't be trained to expect pits in the center of images. I also calculated the new pit coordinates relative to the cropped images with the random offsets and stored them in csv files. Additionally, I cropped random sections from the original tiff images to get background images without any pits. This greatly reduced the chance of false positives by training a model that wouldn't expect a pit in every image.
+The files were initially stored as raw IMG files, so I had to take steps to convert them to formats compatible with the YOLO model. I first converted the IMG files to tiff files to preserve the image quality. The tiff images were very large (5064x52224 pixels), so I had to crop them to 640x640 pixel tiles and I further converted them to png files so the YOLO model could train on them. In processing the images and cropping them, I used the Numpy \cite{2020NumPy-Array} library to slice sections of images. On top of cropping the images around their pits, I randomly cropped the images by adding a random offset so the pits would be randomly placed in the resulting image, rather than being consistently centered. I confirmed that these cropped images didn't contain any pits by writing a function based on the PitScan \cite{wagner2018pitscan} algorithm, which examines the number of shadowed pixels in a potential pit and how they're oriented. The function I wrote created a base threshold for what pixels would be treated as shadows, then looked for a certain density of shadowed pixels in the image. I This introduced variation into the dataset so the model wouldn't be trained to expect pits in the center of images. I also calculated the new pit coordinates relative to the cropped images with the random offsets and stored them in csv files. Additionally, I cropped random sections from the original tiff images to get background images without any pits. But I wanted to be confident that the cropped images didn't include any pits, as they would've skewed the model towards predicting images were backgrounds instead of containing pits. This greatly reduced the chance of false positives by training a model that wouldn't expect a pit in every image.
 
 \subsubsection{Labeling Images}
-After getting the randomly cropped pngs, I read the corresponding pit coordinate csv files and fed them to SAM to generate masks around the pits. SAM generates image overlays, but the YOLO model expects text files with floats, so I normalized the masks and wrote them to text files. When I previously directly fed the images to SAM, it generated masks around many objects, such as boulders and craters, threw off the data I passed into the dataset. But feeding the pit coordinates improved SAM's accuracy and saved time. After labeling the images, I wrote a script to choose 15\% as many background images as pit images. Although including background images is important, the pits only take up dozens of pixels, so too many background images would skew the model. With a more balanced ratio of pit and background images, I then split them into training, testing and validation sets.
+After getting the randomly cropped pngs, I read the corresponding pit coordinate csv files and fed them to SAM to generate masks around the pits. SAM generates image overlays, which I then draw on the images with the OpenCV library \cite{opencv_library}, but the YOLO model expects text files with floats, so I normalized the masks and wrote them to text files. When I previously directly fed the images to SAM, it generated masks around many objects, such as boulders and craters, threw off the data I passed into the dataset. But feeding the pit coordinates improved SAM's accuracy and saved time. However, even with the pit coordinates, the SAM model didn't always create satisfactory labels, so I used Matplotlib \cite{Hunter_Matplotlib_A_2D_2007} to display three different labels per image and prompt the user for the best one. After labeling the images, I wrote a script to choose 15\% as many background images as pit images. Although including background images is important, the pits only take up dozens of pixels, so too many background images would skew the model. With a more balanced ratio of pit and background images, I then split them into training, testing and validation sets.
 
 \subsection{Model Training and Implementation}
 \fontsize{13}{15}\selectfont
@@ -164,7 +161,6 @@ I trained the YOLO object detection model on the split data. The model learned p
 \section{Results}
 
 % \textit{[Replace this section with your results and discussion. The example figures and table below demonstrate the recommended formatting for graphical and tabular content in this template.]}
-
 In the end, the model didn't have a great accuracy score. It could only accurately identify approximately 60\% of lunar pits, and it struggled with false positives, or falsely predicting an image contained a pit when it was just a background image.
 
 \begin{figure}[H]
@@ -183,7 +179,7 @@ In the above confusion matrix, the model's predictions based on the testing imag
     \label{Metrics}
 \end{figure}
 
-Average precision (AP) measures the model's average precision. The model improved slightly more consistently for boxes (B) than masks (M), but both were oscillating around a general curve approaching a horizontal asymptote. But this result can be explained by the lack of data, as getting an image or two wrong can significantly drop the precision, whereas a more robust dataset would be more resilient.
+Average precision (AP) measures the model's average precision. The model improved slightly more consistently for boxes (B) than masks (M), but both were oscillating around a general curve approaching a horizontal asymptote. However, this result can be explained by the lack of data, as getting an image or two wrong can significantly drop the precision, whereas a more robust dataset would be more resilient.
 
 \begin{figure}[htbp]
   \centering
@@ -203,7 +199,7 @@ Average precision (AP) measures the model's average precision. The model improve
   \label{fig:main-group}
 \end{figure}
 
-When inferences are run on new images, one of the arguments that can be passed into the model's prediction method is the confidence threshold. This is the confidence that is required for the model to label an image as a pit. Precision measures how many of the model's predictions were correct, while recall measures how many of the target classes, or pits, were identified by the model. Although precision and recall are inverses of each other, approximately 0.8 is a good confidence threshold to optimize each one.
+When inferences are run on new images, one of the arguments that can be passed into the model's prediction method is the confidence threshold. This is the confidence that is required for the model to label an image as a pit. Precision measures how many of the model's predictions were correct, while recall measures how many of the target classes, or pits, were identified by the model. Although precision and recall are inverses of each other, approximately 0.8 is a good confidence threshold to optimize each one for inferencing new images.
 
 % \begin{table}[h]
 % \centering
