@@ -201,3 +201,9 @@ mkdir ~/lunar_pit_predictions
 ```
 ~/lunar-skylight-model/image_analysis/lunar_pit_pred.py --model ~/lunar_dataset/runs/segment/lunar_pit_v1/weights/best.pt --images col_2_3_imgs --output ~/lunar_pit_predictions
 ```
+
+## Build the paper
+Run 
+```
+pdflatex ~/lunar-skylight-model/NaoJoy_Lunar_Skylight_Detection/main.tex
+```
