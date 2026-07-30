@@ -112,8 +112,8 @@ def main(args = argparse.Namespace):
             print(f"Went through {image_counter} images")
             # print(tile_counter, "tiles were produced")
             print(f"Inferencing took {total_time // 60} minutes and {total_time % 60} seconds")
-            if image_counter == 1:
-                break
+            # if image_counter == 1:
+                # break
 
 if __name__ == "__main__":
     args = parser.parse_args()
