@@ -58,10 +58,10 @@ grep -oE '\S*c\.xml' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > co
 ```
 3. Download the images and xml files with:
 ```
-wget col_1_img_links.txt
+wget -i col_1_img_links.txt
 ```
 ```
-wget col_1_xml_links.txt
+wget -i col_1_xml_links.txt
 ```
 
 4. Create a directory to store the column 2 and 3 IMG files with:
@@ -71,7 +71,7 @@ mkdir ~/col_2_3_imgs && cd ~/col_2_3_imgs
 
 5. Download the images with:
 ```
-wget ~/lunar-skylight-model/img_order_2_3.txt
+wget -i ~/lunar-skylight-model/img_order_2_3.txt
 ```
 
 ### Convert .img files to .tif files

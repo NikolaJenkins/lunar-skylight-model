@@ -10,6 +10,7 @@ from helper_functions import valid_dir, valid_file
 from ultralytics import YOLO
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(
     description=(
@@ -40,99 +41,6 @@ parser.add_argument(
     help = "Name of directory to store image inferences"
 )
 
-def broad_tile_prediction(
-    image_path: Path,
-    model: YOLO,
-    output_dir: Path,
-    macro_size = 4000,
-    tile_size = 640):
-    with rasterio.open(image_path) as uncropped_image:
-        print("Reading image", image_path.name, type(uncropped_image))
-        # image_pred_dir = Path(output_dir / image_path.stem)
-        # image_pred_dir.mkdir(parents = True, exist_ok = True)
-        height, width = uncropped_image.shape
-        tile_counter = 0
-        macro_stride = macro_size - 40
-        tile_stride = tile_size - 40
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        for macro_y in range(0, height - macro_size, macro_stride):
-            for macro_x in range(0, width - macro_size, macro_stride):
-                tile_counter += 1
-                macro_window = rasterio.windows.Window(macro_x, macro_y, macro_size, macro_size)
-                macro = uncropped_image.read(1, window = macro_window)
-                macro_mean = macro.mean()
-                macro_std = macro.std()
-                macro_pixel_min = max(macro.min(), macro_mean - 2 * macro_std)
-                macro_pixel_max = min(macro.max(), macro_mean + 2 * macro_std)
-
-                if macro_pixel_max - macro_pixel_min > 0:
-                    tile_y = 0
-                    while 0 <= tile_y < macro_size:
-                        tile_x = 0
-                        while 0<= tile_x < macro_size:
-                            tile_16_bit = macro[tile_x : tile_x + tile_size, tile_y : tile_y + tile_size]
-                            tile_float = tile_16_bit.astype(np.uint32)
-                            tile_8_bit = ((np.clip(tile_float, macro_pixel_min, macro_pixel_max) - macro_pixel_min) / (macro_pixel_max - macro_pixel_min) * 255.0).astype(np.uint8)
-                            tile_8_bit_rgb = cv2.cvtColor(tile_8_bit, cv2.COLOR_GRAY2RGB)
-
-                            # run inference on images, confirm they're not randomly cropped
-                            # results = model(
-                            #     source = tile_8_bit_rgb,
-                            #     conf = 0.80,
-                            #     iou = 0.45,
-                            #     imgsz = 640,
-                            #     device = device,
-                            #     max_det = 1,
-                            # )
-                            # result = results[0]
-                            # detected_pit_num = len(result.boxes)
-                            # if 0 < detected_pit_num <= 2:
-                            #     print(f"pit discovered at ({macro_x + tile_x}, {macro_y + tile_y})")
-                            #     x_min, y_min, x_max, y_max = result.boxes.xyxy.cpu().numpy()[0].astype(int)
-                            #     confidence = result.boxes.conf.item()
-                            #     print("box coordinates:", x_min, y_min, x_max, y_max)
-                            #     cv2.rectangle(tile_8_bit_rgb, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
-                            #     cv2.putText(
-                            #         tile_8_bit_rgb,
-                            #         f"Pit: {confidence:.2f}",
-                            #         (x_min, max(20, y_min - 10)),
-                            #         cv2.FONT_HERSHEY_SIMPLEX,
-                            #         0.6,
-                            #         (255, 0, 0),
-                            #         2
-                            #     )
-                            #     # cv2.imwrite(image_pred_dir / f"{image.stem}_{macro_x + tile_x}_{macro_y + tile_y}.png", tile_8_bit_rgb)
-                            #     cv2.imshow("Image tile", tile_8_bit_rgb)
-
-                            tile_counter += 1
-                            if tile_counter == 1:
-                                break
-                            print("Current tile x:", tile_x)
-                            tile_x += tile_stride
-                            # ensure tile_x is always less than macro size while not ignoring end strips
-                            if macro_size - tile_size < tile_x < macro_size:
-                                tile_x = macro_size - tile_size
-                                print("Compressing tile x")
-                            elif tile_x > macro_size:
-                                print("Moving down one row")
-                                break
-                        # ensure tile_y is always less than macro size while not ignoring end strips
-                        print("Current tile y:", tile_y)
-                        tile_y += tile_stride
-                        if macro_size - tile_size < tile_y < macro_size:
-                            tile_y = macro_size - tile_size
-                            print("Compressing tile y")
-                        elif tile_y > macro_size:
-                            print("Moving over one macro tile")
-                            break
-                break
-            break
-                # if tile_counter == 1:
-                    # break
-    image_counter += 1
-    print(tile_counter, "tiles were produced")
-    print(f"Inferencing took {total_time // 60} minutes and {total_time % 60} seconds")
-
 def main(args = argparse.Namespace):
     # Load directory and file paths
     model_path = valid_file(Path(args.model))
@@ -141,18 +49,13 @@ def main(args = argparse.Namespace):
     print("Using model:", model_path.name)
 
     # load device gpu and model
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = YOLO(model_path)
 
     image_counter = 0
     for image in images_dir.iterdir():
         if "random" not in image.name and image.suffix == ".IMG":
             start_time = time.perf_counter()
-            # broad_tile_prediction(
-            #     image_path = image,
-            #     model = model,
-            #     output_dir = output_dir,
-            # )
             with rasterio.open(image) as uncropped_image:
                 start_time = time.perf_counter()
                 print("Reading image", image.name, type(uncropped_image))
