@@ -36,11 +36,13 @@ python -m pip install -r requirements.txt
 python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
 ```
 
-6. Download the SAM model by clicking on this link:
-https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth.
-Then move the model from Downloads to the image_analysis directory using
+6. Download the SAM model by running:
 ```
-mv ~/Downloads/sam_vit_h_4b8939.pth ~/lunar-skylight-model/image_analysis
+wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
+```
+Then move the model to the image_analysis directory using
+```
+mv ~/sam_vit_h_4b8939.pth ~/lunar-skylight-model/image_analysis
 ```
 
 ### Install images (skip to generating labels if using sample images)
@@ -71,7 +73,7 @@ mkdir ~/col_2_3_imgs && cd ~/col_2_3_imgs
 
 5. Download the images with:
 ```
-wget -i ~/lunar-skylight-model/img_order_2_3.txt
+wget -i ~/lunar-skylight-model/lunar_pit_order/img_order_2_3.txt
 ```
 
 ### Convert .img files to .tif files
