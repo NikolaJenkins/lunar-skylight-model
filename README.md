@@ -155,11 +155,11 @@ chmod +x ~/lunar-skylight-model/image_analysis/gen_blank_labels.py
 ```
 Then run this command if you downloaded the images.
 ```
-~/lunar-skylight-model/image_analysis/gen_blank_labels --input ~/all_images --output ~/all_masks
+~/lunar-skylight-model/image_analysis/gen_blank_labels.py --input ~/all_images --output ~/all_masks
 ```
 Otherwise, run this command if you're using sample_imgs.
 ```
-~/lunar-skylight-model/image_analysis/gen_blank_labels --input ~/lunar-skylight-model/sample_imgs --output ~/all_masks
+~/lunar-skylight-model/image_analysis/gen_blank_labels.py --input ~/lunar-skylight-model/sample_imgs --output ~/all_masks
 ```
 
 ### Create dataset
