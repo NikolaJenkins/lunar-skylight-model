@@ -141,7 +141,7 @@ mkdir ~/all_masks
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/mask_gen.py
 ``` 
-Then run this command if you downloaded the images.
+Then run this command if you downloaded the images. Follow the instructions in the terminal to select the best mask.
 ```
 ~/lunar-skylight-model/image_analysis/mask_gen.py --input ~/all_images_8_bit --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
 ```
