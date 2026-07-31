@@ -139,15 +139,15 @@ mkdir ~/all_masks
 ```
 2. Run
 ```
-chmod +x ~/lunar-skylight-model/image_analysis/mask_gen
+chmod +x ~/lunar-skylight-model/image_analysis/mask_gen.py
 ``` 
 Then run this command if you downloaded the images.
 ```
-~/lunar-skylight-model/image_analysis/mask_gen --input ~/all_images_8_bit --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
+~/lunar-skylight-model/image_analysis/mask_gen.py --input ~/all_images_8_bit --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
 ```
 Otherwise, run this command if you're using sample_images.
 ```
-~/lunar-skylight-model/image_analysis/mask_gen --input ~/lunar-skylight-model/sample_images --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
+~/lunar-skylight-model/image_analysis/mask_gen.py --input ~/lunar-skylight-model/sample_images --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
 ```
 3. Run 
 ```
