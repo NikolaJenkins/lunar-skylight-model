@@ -137,21 +137,29 @@ cp ~/all_images/*.csv ~/all_images_8_bit
 ```
 mkdir ~/all_masks
 ```
-2. Run 
+2. Run
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/mask_gen
 ``` 
-Then run 
+Then run this command if you downloaded the images.
 ```
 ~/lunar-skylight-model/image_analysis/mask_gen --input ~/all_images_8_bit --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
+```
+Otherwise, run this command if you're using sample_images.
+```
+~/lunar-skylight-model/image_analysis/mask_gen --input ~/lunar-skylight-model/sample_images --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
 ```
 3. Run 
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/gen_blank_labels.py
 ```
-Then run
+Then run this command if you downloaded the images.
 ```
-image_analysis/gen_blank_labels --input ~/all_images --output ~/all_masks
+~/lunar-skylight-model/image_analysis/gen_blank_labels --input ~/all_images --output ~/all_masks
+```
+Otherwise, run this command if you're using sample_images.
+```
+~/lunar-skylight-model/image_analysis/gen_blank_labels --input ~/lunar-skylight-model/sample_images --output ~/all_masks
 ```
 
 ### Create dataset
@@ -170,9 +178,13 @@ mkdir ~/lunar_dataset/labels
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/split_data.py
 ```
-3. Run 
+3. Run this command if you downloaded the images.
 ```
 ~/lunar-skylight-model/image_analysis/split_data.py --input-images ~/all_images_8_bit --input-labels ~/all_masks --output ~/lunar_dataset
+```
+Otherwise run this command if you're using sample_images.
+```
+~/lunar-skylight-model/image_analysis/split_data.py --input-images ~/lunar-skylight-model/sample_images --input-labels ~/all_masks --output ~/lunar_dataset
 ```
 
 ### Train model
