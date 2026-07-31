@@ -42,7 +42,7 @@ wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 ```
 Then move the model to the image_analysis directory using
 ```
-mv ~/sam_vit_h_4b8939.pth ~/lunar-skylight-model/image_analysis
+mv ~/lunar-skylight-model/sam_vit_h_4b8939.pth ~/lunar-skylight-model/image_analysis
 ```
 
 ### Install images (skip to generating labels if using sample images)
