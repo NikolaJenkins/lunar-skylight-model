@@ -165,14 +165,29 @@ Otherwise, run this command if you're using sample_imgs.
 ### Create dataset
 1. Create a directory to store the dataset by running
 ```
-mkdir ~/lunar_dataset
+mkdir ~/lunar_dataset && cd ~/lunar_dataset
 ```
 Inside, create directories called 'images' and 'labels' by running
 ```
-mkdir ~/lunar_dataset/images
+mkdir images
 ```
 ```
-mkdir ~/lunar_dataset/labels
+mkdir labels
+```
+Create the required yaml file by running
+```
+echo "# Dataset root (absolute or relative to where you run training)
+path: /mnt/storage/images/lunar_dataset
+
+# Image folders (relative to path)
+train: images/train
+val: images/val
+test: images/test    # optional
+
+# Classes (index → name)
+names:
+  0: pit
+" > lunar_pits.yaml
 ```
 2. Run 
 ```
