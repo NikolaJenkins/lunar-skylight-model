@@ -60,10 +60,10 @@ grep -oE '\S*C\.xml' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > xm
 ```
 3. Download the images and xml files with:
 ```
-wget -i col_1_img_links.txt
+wget -i img_order_1.txt
 ```
 ```
-wget -i col_1_xml_links.txt
+wget -i xml_order_1.txt
 ```
 
 4. Create a directory to store the column 2 and 3 IMG files with:
