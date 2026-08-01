@@ -53,10 +53,10 @@ mkdir ~/col_1_imgs && cd ~/col_1_imgs
 ```
 2. Copy the links to a txt file. Then run the commands
 ```
-grep -oE '\S*c\.img' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > col_1_img_links.txt
+grep -oE '\S*C\.IMG' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > img_order_1.txt
 ``` 
 ```
-grep -oE '\S*c\.xml' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > col_1_xml_links.txt
+grep -oE '\S*C\.xml' ~/lunar-skylight-model/lunar_pit_order/col_1_order.txt > xml_order_1.txt
 ```
 3. Download the images and xml files with:
 ```
