@@ -36,11 +36,13 @@ python -m pip install -r requirements.txt
 python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
 ```
 
-6. Download the SAM model by clicking on this link:
-https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth.
-Then move the model from Downloads to the image_analysis directory using
+6. Download the SAM model by running:
 ```
-mv ~/Downloads/sam_vit_h_4b8939.pth ~/lunar-skylight-model/image_analysis
+wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
+```
+Then move the model to the image_analysis directory using
+```
+mv ~/lunar-skylight-model/sam_vit_h_4b8939.pth ~/lunar-skylight-model/image_analysis
 ```
 
 ### Install images (skip to generating labels if using sample images)
@@ -71,7 +73,7 @@ mkdir ~/col_2_3_imgs && cd ~/col_2_3_imgs
 
 5. Download the images with:
 ```
-wget -i ~/lunar-skylight-model/img_order_2_3.txt
+wget -i ~/lunar-skylight-model/lunar_pit_order/img_order_2_3.txt
 ```
 
 ### Convert .img files to .tif files
@@ -135,21 +137,29 @@ cp ~/all_images/*.csv ~/all_images_8_bit
 ```
 mkdir ~/all_masks
 ```
-2. Run 
+2. Run
 ```
-chmod +x ~/lunar-skylight-model/image_analysis/mask_gen
+chmod +x ~/lunar-skylight-model/image_analysis/mask_gen.py
 ``` 
-Then run 
+Then run this command if you downloaded the images. Follow the instructions in the terminal to select the best mask.
 ```
-~/lunar-skylight-model/image_analysis/mask_gen --input ~/all_images_8_bit --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
+~/lunar-skylight-model/image_analysis/mask_gen.py --input ~/all_images_8_bit --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
+```
+Otherwise, run this command if you're using sample_imgs.
+```
+~/lunar-skylight-model/image_analysis/mask_gen.py --input ~/lunar-skylight-model/sample_imgs --output ~/all_masks --model ~/lunar-skylight-model/image_analysis/sam_vit_h_4b8939.pth
 ```
 3. Run 
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/gen_blank_labels.py
 ```
-Then run
+Then run this command if you downloaded the images.
 ```
-image_analysis/gen_blank_labels --input ~/all_images --output ~/all_masks
+~/lunar-skylight-model/image_analysis/gen_blank_labels.py --input ~/all_images --output ~/all_masks
+```
+Otherwise, run this command if you're using sample_imgs.
+```
+~/lunar-skylight-model/image_analysis/gen_blank_labels.py --input ~/lunar-skylight-model/sample_imgs --output ~/all_masks
 ```
 
 ### Create dataset
@@ -168,9 +178,13 @@ mkdir ~/lunar_dataset/labels
 ```
 chmod +x ~/lunar-skylight-model/image_analysis/split_data.py
 ```
-3. Run 
+3. Run this command if you downloaded the images.
 ```
 ~/lunar-skylight-model/image_analysis/split_data.py --input-images ~/all_images_8_bit --input-labels ~/all_masks --output ~/lunar_dataset
+```
+Otherwise run this command if you're using sample_imgs.
+```
+~/lunar-skylight-model/image_analysis/split_data.py --input-images ~/lunar-skylight-model/sample_imgs --input-labels ~/all_masks --output ~/lunar_dataset
 ```
 
 ### Train model
